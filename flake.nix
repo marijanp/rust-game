@@ -89,6 +89,7 @@
               ++ lib.optionals stdenv.isDarwin [
                 libiconv
                 darwin.apple_sdk.frameworks.Cocoa
+                darwin.apple_sdk.frameworks.CoreAudio
               ];
 
             # the coverage report will run the tests
