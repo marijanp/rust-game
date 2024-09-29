@@ -87,6 +87,7 @@
                 wayland
               ]
               ++ lib.optionals stdenv.isDarwin [
+                libiconv
                 darwin.apple_sdk.frameworks.Cocoa
               ];
 
