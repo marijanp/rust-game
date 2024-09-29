@@ -97,7 +97,7 @@
         {
           devShells.default = pkgs.mkShell {
             inputsFrom = [ self'.packages.default ];
-            WINIT_X11_SCALE_FACTOR = "1";
+            WINIT_X11_SCALE_FACTOR = "2";
             LD_LIBRARY_PATH = "$LD_LIBRARY_PATH:${lib.makeLibraryPath commonAttrs.buildInputs}";
           };
 
