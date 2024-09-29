@@ -233,7 +233,7 @@ pub fn toggle_pause_menu(
     game_state: Res<State<GameState>>,
     mut next_state: ResMut<NextState<GameState>>,
 ) {
-    if keyboard_input.any_just_pressed(vec![KeyCode::Space, KeyCode::Escape]) {
+    if keyboard_input.any_just_pressed(vec![KeyCode::Escape]) {
         match game_state.get() {
             GameState::Running => {
                 next_state.set(GameState::Paused);
