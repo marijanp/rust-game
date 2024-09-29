@@ -1,3 +1,4 @@
+pub mod animation;
 pub mod cli;
 pub mod color;
 pub mod fruit;
@@ -8,6 +9,7 @@ pub mod ui;
 use crate::cli::CliArgs;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
+use std::collections::HashMap;
 
 /// Runs the game given the cli arguments parameters.
 pub fn run(CliArgs { listen_address }: CliArgs) {
@@ -25,6 +27,7 @@ pub struct GamePlugin;
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.insert_state(GameState::Paused)
+            .add_plugins(animation::AnimationPlugin)
             .add_plugins(player::PlayerPlugin)
             .add_plugins(ui::UiPlugin);
             .add_plugins(fruit::FruitPlugin)
@@ -59,3 +62,6 @@ pub fn spawn_camera(mut commands: Commands, window_query: Query<&Window, With<Pr
         ..default()
     });
 }
+
+#[derive(Component, Deref)]
+pub struct Textures<T>(pub HashMap<T, Handle<Image>>);

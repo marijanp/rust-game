@@ -1,21 +1,49 @@
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
+use std::collections::HashMap;
 
+use crate::animation::components::{AnimationIndices, AnimationTimer};
 use crate::player::{
-    components::{Player, Posture},
-    PLAYER_HEIGHT, PLAYER_SPEED, PLAYER_WIDTH,
+    components::{Movement, Player},
+    PLAYER_HEIGHT, PLAYER_WIDTH,
 };
+use crate::{Action, Textures};
 
-pub fn spawn_player(mut commands: Commands, asset_server: Res<AssetServer>) {
+pub fn spawn_player(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
+) {
+    let texture = asset_server.load("Main Characters/Mask Dude/Idle (32x32).png");
+    let texture_run = asset_server.load("Main Characters/Mask Dude/Run (32x32).png");
+    let texture_jump = asset_server.load("Main Characters/Mask Dude/Jump (32x32).png");
+    let texture_fall = asset_server.load("Main Characters/Mask Dude/Fall (32x32).png");
+    let layout = TextureAtlasLayout::from_grid(
+        UVec2::new(PLAYER_HEIGHT as u32, PLAYER_WIDTH as u32),
+        11,
+        1,
+        None,
+        None,
+    );
     commands.spawn((
+        Player,
         SpriteBundle {
             transform: Transform::from_xyz(PLAYER_WIDTH / 2.0, PLAYER_HEIGHT / 2.0, 0.0),
-            texture: asset_server.load("Players/128x256/Green/alienGreen_stand.png"),
+            texture: texture.clone(),
             ..default()
         },
-        Player {
-            posture: Posture::Stand,
+        TextureAtlas {
+            layout: texture_atlas_layouts.add(layout),
+            index: 0,
         },
+        Textures(HashMap::from([
+            (Movement::Idle, texture),
+            (Movement::Run, texture_run),
+            (Movement::Jump, texture_jump),
+            (Movement::Fall, texture_fall),
+        ])),
+        AnimationIndices { first: 0, last: 10 },
+        AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
     ));
 }
 

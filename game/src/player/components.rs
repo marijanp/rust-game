@@ -1,17 +1,12 @@
 use bevy::prelude::*;
 
-pub enum Posture {
-    Front,
-    Stand,
-    Duck,
+#[derive(Hash, PartialEq, Eq)]
+pub enum Movement {
+    Idle,
+    Run,
     Jump,
-    Hit,
-    Walk,
-    Swim,
-    Climb,
+    Fall,
 }
 
 #[derive(Component)]
-pub struct Player {
-    pub posture: Posture,
-}
+pub struct Player;

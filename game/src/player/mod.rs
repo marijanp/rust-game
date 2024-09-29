@@ -4,9 +4,8 @@ pub mod systems;
 use crate::{AppState, GameState};
 use bevy::prelude::*;
 
-const PLAYER_SPEED: f32 = 300.0;
-const PLAYER_WIDTH: f32 = 128.0;
-const PLAYER_HEIGHT: f32 = 256.0;
+const PLAYER_WIDTH: f32 = 32.0;
+const PLAYER_HEIGHT: f32 = 32.0;
 
 pub struct PlayerPlugin;
 
