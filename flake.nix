@@ -117,7 +117,7 @@
                 cargoArtifacts = self'.packages.game-deps;
                 meta.mainProgram = "game";
                 postInstall = ''
-                  cp -r game/assets $out/bin/
+                  ln -s ${./game/assets}/ $out/bin/assets
                 '';
                 postFixup = lib.optionalString pkgs.stdenv.hostPlatform.isLinux ''
                   patchelf $out/bin/game \
