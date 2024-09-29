@@ -50,7 +50,12 @@
           ...
         }:
         let
-          rustToolchain = inputs'.fenix.packages.stable.toolchain;
+          rustToolchain =
+            with inputs'.fenix.packages;
+            combine [
+              stable.toolchain
+              targets.wasm32-unknown-unknown.stable.rust-std
+            ];
           craneLib = (inputs.crane.mkLib pkgs).overrideToolchain rustToolchain;
 
           commonAttrs = {
@@ -96,15 +101,25 @@
             # the coverage report will run the tests
             doCheck = false;
           };
+          commonAttrsWasm = commonAttrs // {
+            cargoExtraArgs = "--target wasm32-unknown-unknown";
+            nativeBuildInputs = commonAttrs.nativeBuildInputs ++ [ pkgs.lld ];
+            CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_LINKER = "lld";
+          };
         in
         {
           devShells.default = pkgs.mkShell {
             inputsFrom = [ self'.packages.default ];
             WINIT_X11_SCALE_FACTOR = "2";
             LD_LIBRARY_PATH = "$LD_LIBRARY_PATH:${lib.makeLibraryPath commonAttrs.buildInputs}";
+            # wasm
+            CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_LINKER = "lld";
+            packages = [ pkgs.lld ];
           };
 
           packages = {
+            game-deps-wasm = craneLib.buildDepsOnly commonAttrsWasm;
+
             game-deps = craneLib.buildDepsOnly commonAttrs;
 
             game-docs = craneLib.cargoDoc (
@@ -113,6 +128,23 @@
                 cargoArtifacts = self'.packages.game-deps;
               }
             );
+
+            game-wasm = craneLib.buildPackage (
+              commonAttrsWasm
+              // {
+                cargoArtifacts = self'.packages.game-deps;
+              }
+            );
+
+            game-dist = pkgs.runCommand "test" { nativeBuildInputs = [ pkgs.wasm-bindgen-cli ]; } ''
+              wasm-bindgen --no-typescript --target web \
+                --out-dir $out \
+                --out-name "game" \
+                ${self'.packages.game-wasm}/bin/game.wasm
+              ln -s ${./game/assets}/ $out/assets
+              ln -s ${./dist}/index.html $out/index.html
+              ln -s ${./dist}/js $out/js
+            '';
 
             game = craneLib.buildPackage (
               commonAttrs
