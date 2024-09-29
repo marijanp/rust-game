@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use crate::main_menu::components::{MainMenu, PlayButton, QuitButton};
 use crate::{color, AppState, GameState};
 
-pub fn spawn(mut commands: Commands, assets_server: Res<AssetServer>) {
+pub fn spawn(mut commands: Commands) {
     commands
         .spawn((
             NodeBundle {
@@ -33,17 +33,6 @@ pub fn spawn(mut commands: Commands, assets_server: Res<AssetServer>) {
                     ..default()
                 })
                 .with_children(|parent| {
-                    parent.spawn(ImageBundle {
-                        image: assets_server
-                            .load("Players/128x256/Green/alienGreen_stand.png")
-                            .into(),
-                        style: Style {
-                            width: Val::Px(128.0),
-                            height: Val::Px(256.0),
-                            ..default()
-                        },
-                        ..default()
-                    });
                     parent.spawn(TextBundle {
                         text: Text {
                             justify: JustifyText::Center,
