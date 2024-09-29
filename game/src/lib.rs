@@ -1,5 +1,4 @@
 pub mod cli;
-pub mod enemy;
 pub mod main_menu;
 pub mod player;
 pub mod ui;
@@ -25,7 +24,6 @@ impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.insert_state(GameState::Paused)
             .add_plugins(player::PlayerPlugin)
-            .add_plugins(enemy::EnemyPlugin)
             .add_plugins(ui::UiPlugin);
     }
 }
