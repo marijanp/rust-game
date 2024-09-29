@@ -21,18 +21,15 @@ pub fn animate_sprite(
     }
 }
 
-pub fn change_player_animation(
-    mut player: Query<
-        (
-            &Velocity,
-            &Textures<Movement>,
-            &mut Handle<Image>,
-            &mut Sprite,
-            &mut AnimationIndices,
-        ),
-        With<Player>,
-    >,
-) {
+type AnimationRelated<'a> = (
+    &'a Velocity,
+    &'a Textures<Movement>,
+    &'a mut Handle<Image>,
+    &'a mut Sprite,
+    &'a mut AnimationIndices,
+);
+
+pub fn change_player_animation(mut player: Query<AnimationRelated, With<Player>>) {
     if let Ok((velocity, textures, mut current_texture, mut sprite, mut animation_indices)) =
         player.get_single_mut()
     {
