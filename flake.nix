@@ -90,6 +90,7 @@
                 libiconv
                 darwin.apple_sdk.frameworks.Cocoa
                 darwin.apple_sdk.frameworks.CoreAudio
+                darwin.apple_sdk.frameworks.AudioUnit
               ];
 
             # the coverage report will run the tests
