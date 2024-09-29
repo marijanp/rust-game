@@ -1,4 +1,5 @@
 pub mod cli;
+pub mod fruit;
 pub mod main_menu;
 pub mod player;
 pub mod ui;
@@ -25,6 +26,7 @@ impl Plugin for GamePlugin {
         app.insert_state(GameState::Paused)
             .add_plugins(player::PlayerPlugin)
             .add_plugins(ui::UiPlugin);
+            .add_plugins(fruit::FruitPlugin)
     }
 }
 
