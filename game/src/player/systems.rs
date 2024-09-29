@@ -1,5 +1,10 @@
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
+use bevy_rapier2d::prelude::*;
+
+use leafwing_input_manager::prelude::*;
+use leafwing_input_manager::InputManagerBundle;
+
 use std::collections::HashMap;
 
 use crate::animation::components::{AnimationIndices, AnimationTimer};
@@ -44,6 +49,17 @@ pub fn spawn_player(
         ])),
         AnimationIndices { first: 0, last: 10 },
         AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
+        // Input
+        InputManagerBundle {
+            input_map: Action::player_one(),
+            ..Default::default()
+        },
+        // Physics
+        RigidBody::Dynamic,
+        Velocity::default(),
+        Collider::cuboid(9., 15.95),
+        LockedAxes::ROTATION_LOCKED_Z,
+        KinematicCharacterController::default(),
     ));
 }
 
@@ -53,32 +69,20 @@ pub fn despawn(mut commands: Commands, enemy_entity_query: Query<Entity, With<Pl
     }
 }
 
-pub fn move_player(
-    keyboard_input: Res<ButtonInput<KeyCode>>,
-    mut player_query: Query<&mut Transform, With<Player>>,
-    time: Res<Time>,
-) {
-    if let Ok(mut transform) = player_query.get_single_mut() {
-        let mut direction = Vec3::ZERO;
-
-        if keyboard_input.pressed(KeyCode::ArrowRight) || keyboard_input.pressed(KeyCode::KeyA) {
-            direction += Vec3::new(-1.0, 0.0, 0.0);
+const MAX_SPEED: f32 = 150.0;
+const ACCELERATION: f32 = 50.0;
+pub fn move_player(mut player_query: Query<(&ActionState<Action>, &mut Velocity), With<Player>>) {
+    if let Ok((action, mut velocity)) = player_query.get_single_mut() {
+        if action.just_pressed(&Action::Jump) {
+            velocity.linvel.y = MAX_SPEED;
+        } else if action.just_pressed(&Action::Fall) {
+            velocity.linvel.y = -MAX_SPEED;
+        } else if action.pressed(&Action::Left) {
+            velocity.linvel.x -= ACCELERATION;
+        } else if action.pressed(&Action::Right) {
+            velocity.linvel.x += ACCELERATION;
         }
-        if keyboard_input.pressed(KeyCode::ArrowRight) || keyboard_input.pressed(KeyCode::KeyD) {
-            direction += Vec3::new(1.0, 0.0, 0.0);
-        }
-        if keyboard_input.pressed(KeyCode::ArrowUp) || keyboard_input.pressed(KeyCode::KeyW) {
-            direction += Vec3::new(0.0, 1.0, 0.0);
-        }
-        if keyboard_input.pressed(KeyCode::ArrowUp) || keyboard_input.pressed(KeyCode::KeyS) {
-            direction += Vec3::new(0.0, -1.0, 0.0);
-        }
-
-        if direction.length() > 0.0 {
-            direction = direction.normalize();
-        }
-
-        transform.translation += direction * PLAYER_SPEED * time.delta_seconds();
+        velocity.linvel.x = velocity.linvel.x.clamp(-MAX_SPEED, MAX_SPEED);
     }
 }
 
