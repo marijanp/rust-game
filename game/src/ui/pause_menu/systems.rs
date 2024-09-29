@@ -1,8 +1,7 @@
 use bevy::prelude::*;
 
 use super::components::{MainMenuButton, PauseMenu, QuitButton, ResumeButton};
-use crate::main_menu::styles::color;
-use crate::{AppState, GameState};
+use crate::{color, AppState, GameState};
 
 pub fn spawn(mut commands: Commands, assets_server: Res<AssetServer>) {
     commands

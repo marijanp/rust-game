@@ -1,4 +1,5 @@
 pub mod cli;
+pub mod color;
 pub mod fruit;
 pub mod main_menu;
 pub mod player;
