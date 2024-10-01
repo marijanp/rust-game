@@ -8,6 +8,7 @@ use leafwing_input_manager::InputManagerBundle;
 use std::collections::HashMap;
 
 use crate::animation::components::{AnimationIndices, AnimationTimer};
+use crate::fruit::components::Fruit;
 use crate::player::{
     components::{Movement, Player},
     PLAYER_HEIGHT, PLAYER_WIDTH,
@@ -63,6 +64,7 @@ pub fn spawn_player(
             apply_impulse_to_dynamic_bodies: true,
             ..default()
         },
+        ActiveEvents::COLLISION_EVENTS,
     ));
 }
 
@@ -135,5 +137,23 @@ pub fn limit_player_movement(
         }
 
         transform.translation = translation;
+    }
+}
+
+pub fn collect_fruits(
+    mut commands: Commands,
+    character_controller_outputs: Query<
+        &KinematicCharacterControllerOutput,
+        (With<Player>, Changed<KinematicCharacterControllerOutput>),
+    >,
+    fruits: Query<Entity, With<Fruit>>,
+) {
+    if let Ok(output) = character_controller_outputs.get_single() {
+        for collision in &output.collisions {
+            if fruits.get(collision.entity).is_ok() {
+                info!("Fruit collected");
+                commands.entity(collision.entity).despawn()
+            }
+        }
     }
 }
