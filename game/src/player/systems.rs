@@ -71,8 +71,18 @@ pub fn despawn(mut commands: Commands, enemy_entity_query: Query<Entity, With<Pl
 
 const MAX_SPEED: f32 = 150.0;
 const ACCELERATION: f32 = 50.0;
-pub fn move_player(mut player_query: Query<(&ActionState<Action>, &mut Velocity), With<Player>>) {
-    if let Ok((action, mut velocity)) = player_query.get_single_mut() {
+pub fn move_player(
+    mut player_query: Query<
+        (
+            &ActionState<Action>,
+            &mut KinematicCharacterController,
+            &mut Velocity,
+        ),
+        With<Player>,
+    >,
+    time: Res<Time>,
+) {
+    if let Ok((action, mut controller, mut velocity)) = player_query.get_single_mut() {
         if action.just_pressed(&Action::Jump) {
             velocity.linvel.y = MAX_SPEED;
         } else if action.just_pressed(&Action::Fall) {
@@ -83,6 +93,11 @@ pub fn move_player(mut player_query: Query<(&ActionState<Action>, &mut Velocity)
             velocity.linvel.x += ACCELERATION;
         }
         velocity.linvel.x = velocity.linvel.x.clamp(-MAX_SPEED, MAX_SPEED);
+        let translation_change = velocity.linvel * time.delta_seconds();
+        controller.translation = match controller.translation {
+            Some(existing_translation) => Some(existing_translation + translation_change),
+            None => Some(translation_change),
+        };
     }
 }
 
