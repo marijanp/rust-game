@@ -59,7 +59,10 @@ pub fn spawn_player(
         Velocity::default(),
         Collider::cuboid(9., 15.95),
         LockedAxes::ROTATION_LOCKED_Z,
-        KinematicCharacterController::default(),
+        KinematicCharacterController {
+            apply_impulse_to_dynamic_bodies: true,
+            ..default()
+        },
     ));
 }
 
