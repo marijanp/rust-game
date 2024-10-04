@@ -1,5 +1,6 @@
 pub mod animation;
 pub mod cli;
+pub mod collider;
 pub mod color;
 pub mod fruit;
 pub mod main_menu;
@@ -7,9 +8,12 @@ pub mod player;
 pub mod ui;
 
 use crate::cli::CliArgs;
+use crate::collider::ColliderBundle;
+use crate::fruit::components::FruitBundle;
 
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
+use bevy_ecs_ldtk::prelude::*;
 use bevy_rapier2d::prelude::*;
 use leafwing_input_manager::prelude::*;
 use std::collections::HashMap;
@@ -31,13 +35,18 @@ impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.insert_state(GameState::Paused)
             .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(16.0))
-            .add_plugins(RapierDebugRenderPlugin::default())
             .add_plugins(InputManagerPlugin::<Action>::default())
+            .add_plugins(LdtkPlugin)
+            .insert_resource(LevelSelection::index(0))
+            .register_ldtk_entity::<FruitBundle>("Cherry")
+            .register_ldtk_int_cell::<GroundBundle>(1)
             .add_plugins(animation::AnimationPlugin)
             .add_plugins(player::PlayerPlugin)
             .add_plugins(fruit::FruitPlugin)
             .add_plugins(ui::UiPlugin)
             .add_systems(OnEnter(AppState::InGame), spawn_ground);
+        #[cfg(debug_assertions)]
+        app.add_plugins(RapierDebugRenderPlugin::default());
     }
 }
 
@@ -97,23 +106,19 @@ pub fn spawn_camera(mut commands: Commands, window_query: Query<&Window, With<Pr
 #[derive(Component, Deref)]
 pub struct Textures<T>(pub HashMap<T, Handle<Image>>);
 
-fn spawn_ground(mut commands: Commands, window_query: Query<&Window, With<PrimaryWindow>>) {
-    let window = window_query.get_single().unwrap();
-    /* Create the ground. */
-    commands.spawn((
-        Collider::cuboid(window.width(), 10.),
-        TransformBundle::from(Transform::from_xyz(0., 0., 0.)),
-    ));
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Default, Component)]
+pub struct Ground;
 
-    /* Create the bouncing ball. */
-    commands.spawn((
-        RigidBody::Dynamic,
-        Collider::ball(50.0),
-        Restitution::coefficient(0.9),
-        TransformBundle::from(Transform::from_xyz(
-            window.width() / 2.,
-            window.height(),
-            0.,
-        )),
-    ));
+#[derive(Clone, Debug, Default, Bundle, LdtkIntCell)]
+pub struct GroundBundle {
+    ground: Ground,
+    #[from_int_grid_cell]
+    collider: ColliderBundle,
+}
+
+fn spawn_ground(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.spawn(LdtkWorldBundle {
+        ldtk_handle: asset_server.load("tile-based-game.ldtk"),
+        ..Default::default()
+    });
 }

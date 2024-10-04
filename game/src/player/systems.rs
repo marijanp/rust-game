@@ -34,7 +34,7 @@ pub fn spawn_player(
     commands.spawn((
         Player,
         SpriteBundle {
-            transform: Transform::from_xyz(PLAYER_WIDTH / 2.0, PLAYER_HEIGHT / 2.0, 0.0),
+            transform: Transform::from_xyz(PLAYER_WIDTH / 2.0, PLAYER_HEIGHT / 2.0 + 32., 0.0),
             texture: texture.clone(),
             ..default()
         },
