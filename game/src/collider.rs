@@ -21,6 +21,13 @@ impl From<&EntityInstance> for ColliderBundle {
                 rotation_constraints: LockedAxes::ROTATION_LOCKED_Z,
                 ..default()
             },
+            "Player" => ColliderBundle {
+                collider: Collider::cuboid(9., 15.95),
+                rigid_body: RigidBody::Dynamic,
+                active_events: ActiveEvents::COLLISION_EVENTS,
+                rotation_constraints: LockedAxes::ROTATION_LOCKED_Z,
+                ..default()
+            },
             entity => {
                 tracing::debug!("Unknown entity '{entity}'");
                 ColliderBundle::default()

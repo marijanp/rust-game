@@ -10,6 +10,7 @@ pub mod ui;
 use crate::cli::CliArgs;
 use crate::collider::ColliderBundle;
 use crate::fruit::components::FruitBundle;
+use crate::player::components::PlayerBundle;
 
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
@@ -38,6 +39,7 @@ impl Plugin for GamePlugin {
             .add_plugins(LdtkPlugin)
             .insert_resource(LevelSelection::index(0))
             .register_ldtk_entity::<FruitBundle>("Cherry")
+            .register_ldtk_entity::<PlayerBundle>("Player")
             .register_ldtk_int_cell::<GroundBundle>(1)
             .add_plugins(animation::AnimationPlugin)
             .add_plugins(player::PlayerPlugin)

@@ -11,17 +11,16 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(AppState::InGame), systems::spawn_player)
-            .add_systems(
-                Update,
-                (
-                    systems::move_player,
-                    systems::collect_fruits,
-                    systems::limit_player_movement,
-                )
-                    .chain()
-                    .run_if(in_state(GameState::Running)),
+        app.add_systems(
+            Update,
+            (
+                systems::move_player,
+                systems::collect_fruits,
+                systems::limit_player_movement,
             )
-            .add_systems(OnExit(AppState::InGame), systems::despawn);
+                .chain()
+                .run_if(in_state(GameState::Running)),
+        )
+        .add_systems(OnExit(AppState::InGame), systems::despawn);
     }
 }

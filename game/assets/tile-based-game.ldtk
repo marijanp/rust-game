@@ -11,7 +11,7 @@
 	"iid": "0658ddd0-73f0-11ef-a54e-0bf9b407931e",
 	"jsonVersion": "1.5.3",
 	"appBuildId": 473703,
-	"nextUid": 25,
+	"nextUid": 31,
 	"identifierStyle": "Capitalize",
 	"toc": [],
 	"worldLayout": "Free",
@@ -448,6 +448,82 @@
 			"pivotX": 0,
 			"pivotY": 0,
 			"fieldDefs": []
+		},
+		{
+			"identifier": "Player",
+			"uid": 28,
+			"tags": [],
+			"exportToToc": false,
+			"allowOutOfBounds": false,
+			"doc": null,
+			"width": 32,
+			"height": 32,
+			"resizableX": false,
+			"resizableY": false,
+			"minWidth": null,
+			"maxWidth": null,
+			"minHeight": null,
+			"maxHeight": null,
+			"keepAspectRatio": false,
+			"tileOpacity": 1,
+			"fillOpacity": 0.08,
+			"lineOpacity": 0,
+			"hollow": false,
+			"color": "#0099DB",
+			"renderMode": "Tile",
+			"showName": true,
+			"tilesetId": 25,
+			"tileRenderMode": "FitInside",
+			"tileRect": { "tilesetUid": 25, "x": 0, "y": 0, "w": 32, "h": 32 },
+			"uiTileRect": null,
+			"nineSliceBorders": [],
+			"maxCount": 1,
+			"limitScope": "PerWorld",
+			"limitBehavior": "MoveLastOne",
+			"pivotX": 0,
+			"pivotY": 0,
+			"fieldDefs": [
+				{
+					"identifier": "Movement",
+					"doc": null,
+					"__type": "LocalEnum.Movement",
+					"uid": 30,
+					"type": "F_Enum(27)",
+					"isArray": false,
+					"canBeNull": false,
+					"arrayMinLength": null,
+					"arrayMaxLength": null,
+					"editorDisplayMode": "Hidden",
+					"editorDisplayScale": 1,
+					"editorDisplayPos": "Above",
+					"editorLinkStyle": "StraightArrow",
+					"editorDisplayColor": null,
+					"editorAlwaysShow": false,
+					"editorShowInWorld": true,
+					"editorCutLongValues": true,
+					"editorTextSuffix": null,
+					"editorTextPrefix": null,
+					"useForSmartColor": false,
+					"exportToToc": false,
+					"searchable": false,
+					"min": null,
+					"max": null,
+					"regex": null,
+					"acceptFileTypes": null,
+					"defaultOverride": {
+						"id": "V_String",
+						"params": ["Idle"]
+					},
+					"textLanguageMode": null,
+					"symmetricalRef": false,
+					"autoChainRef": true,
+					"allowOutOfLevelRef": true,
+					"allowedRefs": "OnlySame",
+					"allowedRefsEntityUid": null,
+					"allowedRefTags": [],
+					"tilesetUid": null
+				}
+			]
 		}
 	], "tilesets": [
 		{
@@ -493,8 +569,32 @@
 				"opaqueTiles": "11111011111011110000001111101111101111000000111000111000011100000000000000000000000000001111101111101111011111111110111110111101111111100011100001110111000000000000000000000000111110111110111101111011111011111011110111101110001110000111001110",
 				"averageColors": "f677f566f778f445f5560000f682f782f783fb65fb650000f965fa75f965fa6500004a954984498500000000f566f223f566f556f4450000fa65fb65fb65f974f9740000f965fa75fb86fa54000058655965586500000000f778f566f677000000000000fa65fa65fa650000000000000000f834f954f9440000456645664566000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000f854f744f854f644f6440000fb74fc74fb74f944f9440000f889f899f889f8890000fb44fc44fc44fc44fc44f744f223f744f644f6440000f944f944f944fa54fa540000f778f899f89af89a0000fb34fc44fc44fc44fc44f854f744f854000000000000f944f944f9440000000000000000f788f889f8890000fa34fb34fb44000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000f376f265f376f244f2440000fc69fc79fc79fc96fc960000fc74fc74fc74fc740000fcb4fcb3fcb5fcb50000f265f223f265f244f2440000fb96fc96fc96fc88fc880000fc74fc74fc74fc740000fca5fcb5fcb5fcb30000f376f265f376000000000000fb86fb96fb860000000000000000fc74fc74fc7400000000fcb4fdb5fcb50000"
 			}
+		},
+		{
+			"__cWid": 11,
+			"__cHei": 1,
+			"identifier": "PlayerIdle",
+			"uid": 25,
+			"relPath": "Main Characters/Mask Dude/Idle (32x32).png",
+			"embedAtlas": null,
+			"pxWid": 352,
+			"pxHei": 32,
+			"tileGridSize": 32,
+			"spacing": 0,
+			"padding": 0,
+			"tags": [],
+			"tagsSourceEnumUid": 27,
+			"enumTags": [ { "enumValueId": "Idle", "tileIds": [0,1,2,3,4,5,6,7,8,9,10] }, { "enumValueId": "Run", "tileIds": [] }, { "enumValueId": "Jump", "tileIds": [] }, { "enumValueId": "Fall", "tileIds": [] } ],
+			"customData": [],
+			"savedSelections": [],
+			"cachedPixelData": { "opaqueTiles": "00000000000", "averageColors": "7977797779777a777a778a778a778a778a777a777a77" }
 		}
-	], "enums": [], "externalEnums": [], "levelFields": [] },
+	], "enums": [{ "identifier": "Movement", "uid": 27, "values": [
+		{ "id": "Idle", "tileRect": null, "color": 12470831 },
+		{ "id": "Run", "tileRect": null, "color": 14120515 },
+		{ "id": "Jump", "tileRect": null, "color": 15389866 },
+		{ "id": "Fall", "tileRect": null, "color": 14984818 }
+	], "iconTilesetUid": null, "externalRelPath": null, "externalFileChecksum": null, "tags": [] }], "externalEnums": [], "levelFields": [] },
 	"levels": [
 		{
 			"identifier": "Level_0",
@@ -1261,6 +1361,25 @@
 							"fieldInstances": [],
 							"__worldX": 1184,
 							"__worldY": 608
+						},
+						{
+							"__identifier": "Player",
+							"__grid": [1,41],
+							"__pivot": [0,0],
+							"__tags": [],
+							"__tile": { "tilesetUid": 25, "x": 0, "y": 0, "w": 32, "h": 32 },
+							"__smartColor": "#0099DB",
+							"iid": "5811d380-73f0-11ef-9d30-f7c2863ea82f",
+							"width": 32,
+							"height": 32,
+							"defUid": 28,
+							"px": [16,656],
+							"fieldInstances": [{ "__identifier": "Movement", "__type": "LocalEnum.Movement", "__value": "Idle", "__tile": null, "defUid": 30, "realEditorValues": [{
+								"id": "V_String",
+								"params": ["Idle"]
+							}] }],
+							"__worldX": 16,
+							"__worldY": 656
 						}
 					]
 				}
