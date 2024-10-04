@@ -2,8 +2,7 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::{KinematicCharacterControllerOutput, Velocity};
 
 use super::components::{AnimationIndices, AnimationTimer};
-use crate::player::components::{Movement, Player};
-use crate::Textures;
+use crate::player::components::Player;
 
 pub fn animate_sprite(
     time: Res<Time>,
@@ -23,7 +22,6 @@ pub fn animate_sprite(
 
 type AnimationRelated<'a> = (
     &'a Velocity,
-    &'a Textures<Movement>,
     &'a mut Handle<Image>,
     &'a mut Sprite,
     &'a mut AnimationIndices,
@@ -32,35 +30,32 @@ type AnimationRelated<'a> = (
 
 const DELTA: f32 = 10.0;
 
-pub fn change_player_animation(mut player: Query<AnimationRelated, With<Player>>) {
+pub fn change_player_animation(
+    mut player: Query<AnimationRelated, With<Player>>,
+    asset_server: Res<AssetServer>,
+) {
     if let Ok((
         velocity,
-        textures,
         mut current_texture,
         mut sprite,
         mut animation_indices,
         character_controller,
     )) = player.get_single_mut()
     {
-        //if (-DELTA..=DELTA).contains(&velocity.linvel.y) {
         if character_controller.grounded {
             if (-DELTA..=DELTA).contains(&velocity.linvel.x) {
-                *current_texture = textures.get(&Movement::Idle).unwrap().clone();
+                *current_texture = asset_server.load("Main Characters/Mask Dude/Idle (32x32).png");
                 animation_indices.last = 10;
-                info!("idle velocity: {velocity:?}");
             } else {
-                info!("run velocity: {velocity:?}");
                 animation_indices.last = 10;
-                *current_texture = textures.get(&Movement::Run).unwrap().clone();
+                *current_texture = asset_server.load("Main Characters/Mask Dude/Run (32x32).png");
             }
         } else if !character_controller.grounded && velocity.linvel.y > DELTA {
-            info!("jump velocity: {velocity:?}");
-            *current_texture = textures.get(&Movement::Jump).unwrap().clone();
+            *current_texture = asset_server.load("Main Characters/Mask Dude/Jump (32x32).png");
             animation_indices.last = 0;
         } else if !character_controller.grounded && velocity.linvel.y < -DELTA {
-            info!("fall velocity: {velocity:?}");
             animation_indices.last = 0;
-            *current_texture = textures.get(&Movement::Fall).unwrap().clone()
+            *current_texture = asset_server.load("Main Characters/Mask Dude/Fall (32x32).png");
         }
         if velocity.linvel.x > DELTA {
             sprite.flip_x = false;

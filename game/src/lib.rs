@@ -16,7 +16,6 @@ use bevy::window::PrimaryWindow;
 use bevy_ecs_ldtk::prelude::*;
 use bevy_rapier2d::prelude::*;
 use leafwing_input_manager::prelude::*;
-use std::collections::HashMap;
 
 /// Runs the game given the cli arguments parameters.
 pub fn run(CliArgs { listen_address }: CliArgs) {
@@ -102,9 +101,6 @@ pub fn spawn_camera(mut commands: Commands, window_query: Query<&Window, With<Pr
         ..default()
     });
 }
-
-#[derive(Component, Deref)]
-pub struct Textures<T>(pub HashMap<T, Handle<Image>>);
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug, Default, Component)]
 pub struct Ground;
