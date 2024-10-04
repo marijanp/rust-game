@@ -116,8 +116,7 @@
             CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_LINKER = "lld";
             packages = [
               pkgs.lld
-              pkgs.ldtk
-            ];
+            ] ++ lib.optionals pkgs.stdenv.isLinux [ pkgs.ldtk ];
           };
 
           packages = {
@@ -139,15 +138,17 @@
               }
             );
 
-            game-dist = pkgs.runCommand "test" { nativeBuildInputs = [ pkgs.wasm-bindgen-cli ]; } ''
-              wasm-bindgen --no-typescript --target web \
-                --out-dir $out \
-                --out-name "game" \
-                ${self'.packages.game-wasm}/bin/game.wasm
-              ln -s ${./game/assets}/ $out/assets
-              ln -s ${./dist}/index.html $out/index.html
-              ln -s ${./dist}/js $out/js
-            '';
+            game-dist =
+              pkgs.runCommand "game-wasm-bindgen" { nativeBuildInputs = [ pkgs.wasm-bindgen-cli ]; }
+                ''
+                  wasm-bindgen --no-typescript --target web \
+                    --out-dir $out \
+                    --out-name "game" \
+                    ${self'.packages.game-wasm}/bin/game.wasm
+                  ln -s ${./game/assets}/ $out/assets
+                  ln -s ${./dist}/index.html $out/index.html
+                  ln -s ${./dist}/js $out/js
+                '';
 
             game = craneLib.buildPackage (
               commonAttrs
@@ -174,7 +175,7 @@
           };
 
           checks = {
-            inherit (self'.packages) game-docs game;
+            inherit (self'.packages) game-docs game game-dist;
 
             lint = craneLib.cargoClippy (
               commonAttrs
