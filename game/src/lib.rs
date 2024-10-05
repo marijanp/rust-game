@@ -10,7 +10,7 @@ pub mod ui;
 use crate::cli::CliArgs;
 use crate::collider::ColliderBundle;
 use crate::fruit::components::FruitBundle;
-use crate::player::components::PlayerBundle;
+use crate::player::components::{Player, PlayerBundle};
 
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
@@ -45,7 +45,8 @@ impl Plugin for GamePlugin {
             .add_plugins(player::PlayerPlugin)
             .add_plugins(fruit::FruitPlugin)
             .add_plugins(ui::UiPlugin)
-            .add_systems(OnEnter(AppState::InGame), spawn_ground);
+            .add_systems(OnEnter(AppState::InGame), spawn_ground)
+            .add_systems(Update, touch_system);
         #[cfg(debug_assertions)]
         app.add_plugins(RapierDebugRenderPlugin::default());
     }
@@ -119,4 +120,41 @@ fn spawn_ground(mut commands: Commands, asset_server: Res<AssetServer>) {
         ldtk_handle: asset_server.load("tile-based-game.ldtk"),
         ..Default::default()
     });
+}
+
+fn touch_system(
+    touches: Res<Touches>,
+    window_query: Query<&Window, With<PrimaryWindow>>,
+    mut action_state_query: Query<&mut ActionState<Action>>,
+    player_query: Query<&Transform, With<Player>>,
+) {
+    let window = window_query.get_single().unwrap();
+    if let Ok(player) = player_query.get_single() {
+        if let Ok(mut action_state) = action_state_query.get_single_mut() {
+            if touches
+                .iter()
+                .any(|touch| touch.position().x < player.translation.x)
+            {
+                action_state.press(&Action::Left);
+            } else if touches
+                .iter()
+                .any(|touch| touch.position().x >= player.translation.x)
+            {
+                action_state.press(&Action::Right);
+            }
+            if touches.iter().count() + touches.iter_just_pressed().count() >= 2 {
+                if touches
+                    .iter_just_pressed()
+                    .any(|touch| touch.position().y < window.height() / 2.)
+                {
+                    action_state.press(&Action::Jump);
+                } else if touches
+                    .iter_just_pressed()
+                    .any(|touch| touch.position().y >= window.height() / 2.)
+                {
+                    action_state.press(&Action::Fall);
+                }
+            }
+        }
+    };
 }
