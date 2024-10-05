@@ -6,12 +6,39 @@
     <title>Game</title>
     <script src="js/analytics.js"></script>
     <script src="https://analytics.marijan.pro/matomo.js" async defer></script>
+    <style>
+        #loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            display: block;
+        }
+    </style>
 </head>
 <body>
+    <div id="loading">
+        Loading game, please wait...
+    </div>
+
     <script type="module">
-        import init from './game.js';
-        init().then(() => {
-            console.log("Wasm loaded successfully!");
+        window.addEventListener('DOMContentLoaded', () => {
+            const loadingMessage = document.getElementById('loading');
+            import('./game.js')
+                .then((module) => {
+                    return module.default();
+                })
+                .then(() => {
+                    loadingMessage.style.display = 'none';
+                    console.log("Wasm loaded successfully!");
+                })
+                .catch((error) => {
+                    loadingMessage.style.display = 'none';
+                    console.error("Error loading Wasm:", error);
+                });
         });
     </script>
 </body>
