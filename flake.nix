@@ -71,9 +71,14 @@
             };
 
             # https://github.com/bevyengine/bevy/blob/latest/docs/linux_dependencies.md
-            nativeBuildInputs = with pkgs; [
-              pkg-config
-            ];
+            nativeBuildInputs =
+              with pkgs;
+              [
+                pkg-config
+              ]
+              ++ lib.optionals stdenv.isDarwin [
+                rustPlatform.bindgenHook
+              ];
             buildInputs =
               with pkgs;
               [
