@@ -1,12 +1,32 @@
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use bevy_rapier2d::prelude::*;
+use std::collections::HashMap;
 
 use leafwing_input_manager::prelude::*;
 
 use crate::fruit::components::Fruit;
-use crate::player::{components::Player, PLAYER_HEIGHT, PLAYER_WIDTH};
-use crate::Action;
+use crate::player::{
+    components::{Movement, Player},
+    PLAYER_HEIGHT, PLAYER_WIDTH,
+};
+use crate::{Action, Tilesets};
+
+pub fn load_player_tilesets(
+    asset_server: Res<AssetServer>,
+    mut tileset: ResMut<Tilesets<Movement>>,
+) {
+    let idle_tileset = asset_server.load("Main Characters/Mask Dude/Idle (32x32).png");
+    let run_tileset = asset_server.load("Main Characters/Mask Dude/Run (32x32).png");
+    let jump_tileset = asset_server.load("Main Characters/Mask Dude/Jump (32x32).png");
+    let fall_tileset = asset_server.load("Main Characters/Mask Dude/Fall (32x32).png");
+    *tileset = Tilesets(HashMap::from([
+        (Movement::Idle, idle_tileset),
+        (Movement::Run, run_tileset),
+        (Movement::Jump, jump_tileset),
+        (Movement::Fall, fall_tileset),
+    ]));
+}
 
 pub fn despawn(mut commands: Commands, enemy_entity_query: Query<Entity, With<Player>>) {
     if let Ok(player_entity) = enemy_entity_query.get_single() {

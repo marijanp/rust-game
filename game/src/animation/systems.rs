@@ -2,7 +2,8 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::{KinematicCharacterControllerOutput, Velocity};
 
 use super::components::{AnimationIndices, AnimationTimer};
-use crate::player::components::Player;
+use crate::player::components::{Movement, Player};
+use crate::Tilesets;
 
 pub fn animate_sprite(
     time: Res<Time>,
@@ -32,7 +33,7 @@ const DELTA: f32 = 10.0;
 
 pub fn change_player_animation(
     mut player: Query<AnimationRelated, With<Player>>,
-    asset_server: Res<AssetServer>,
+    tileset: Res<Tilesets<Movement>>,
 ) {
     if let Ok((
         velocity,
@@ -44,18 +45,18 @@ pub fn change_player_animation(
     {
         if character_controller.grounded {
             if (-DELTA..=DELTA).contains(&velocity.linvel.x) {
-                *current_texture = asset_server.load("Main Characters/Mask Dude/Idle (32x32).png");
+                *current_texture = tileset.get(&Movement::Idle).unwrap().clone();
                 animation_indices.last = 10;
             } else {
                 animation_indices.last = 10;
-                *current_texture = asset_server.load("Main Characters/Mask Dude/Run (32x32).png");
+                *current_texture = tileset.get(&Movement::Run).unwrap().clone();
             }
         } else if !character_controller.grounded && velocity.linvel.y > DELTA {
-            *current_texture = asset_server.load("Main Characters/Mask Dude/Jump (32x32).png");
+            *current_texture = tileset.get(&Movement::Jump).unwrap().clone();
             animation_indices.last = 0;
         } else if !character_controller.grounded && velocity.linvel.y < -DELTA {
             animation_indices.last = 0;
-            *current_texture = asset_server.load("Main Characters/Mask Dude/Fall (32x32).png");
+            *current_texture = tileset.get(&Movement::Fall).unwrap().clone();
         }
         if velocity.linvel.x > DELTA {
             sprite.flip_x = false;

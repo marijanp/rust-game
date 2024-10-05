@@ -11,6 +11,7 @@ use crate::cli::CliArgs;
 use crate::collider::ColliderBundle;
 use crate::fruit::components::FruitBundle;
 use crate::player::components::{Player, PlayerBundle};
+use std::collections::HashMap;
 
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
@@ -45,7 +46,11 @@ impl Plugin for GamePlugin {
             .add_plugins(player::PlayerPlugin)
             .add_plugins(fruit::FruitPlugin)
             .add_plugins(ui::UiPlugin)
-            .add_systems(OnEnter(AppState::InGame), spawn_ground)
+            .insert_resource(Tilesets::<player::components::Movement>::default())
+            .add_systems(
+                OnEnter(AppState::InGame),
+                (spawn_ground, player::systems::load_player_tilesets),
+            )
             .add_systems(Update, touch_system);
         #[cfg(debug_assertions)]
         app.add_plugins(RapierDebugRenderPlugin::default());
@@ -158,3 +163,6 @@ fn touch_system(
         }
     };
 }
+
+#[derive(Default, Deref, Resource)]
+pub struct Tilesets<T>(pub HashMap<T, Handle<Image>>);

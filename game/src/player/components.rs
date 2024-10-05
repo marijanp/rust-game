@@ -6,6 +6,15 @@ use leafwing_input_manager::InputManagerBundle;
 use crate::animation::components::{AnimationIndices, AnimationTimer};
 use crate::{Action, ColliderBundle};
 
+#[derive(Default, Hash, PartialEq, Eq)]
+pub enum Movement {
+    #[default]
+    Idle,
+    Run,
+    Jump,
+    Fall,
+}
+
 #[derive(Default, Component)]
 pub struct Player;
 
@@ -29,6 +38,7 @@ pub struct PlayerBundle {
 fn animation_indices(_: &EntityInstance) -> AnimationIndices {
     AnimationIndices { first: 0, last: 10 }
 }
+
 fn animation_timer(_: &EntityInstance) -> AnimationTimer {
     AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating))
 }
