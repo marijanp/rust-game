@@ -34,31 +34,46 @@ pub fn despawn(mut commands: Commands, enemy_entity_query: Query<Entity, With<Pl
     }
 }
 
-const MAX_SPEED: f32 = 150.0;
-const ACCELERATION: f32 = 50.0;
+// http://www.mathforgameprogrammers.com/gdc2016/GDC2016_Pittman_Kyle_BuildingABetterJump.pdf
+const METER: f32 = 16.;
+const V_X: f32 = 10. * METER;
+const HEIGHT: f32 = 5. * METER;
+const DISTANCE_AT_HEIGHT: f32 = 2.5 * METER;
+
+const V_0: f32 = (2. * HEIGHT * V_X) / DISTANCE_AT_HEIGHT;
+const GRAVITY: f32 = (-2. * HEIGHT * (V_X * V_X)) / (DISTANCE_AT_HEIGHT * DISTANCE_AT_HEIGHT);
+
 pub fn move_player(
     mut player_query: Query<
         (
             &ActionState<Action>,
             &mut KinematicCharacterController,
-            &mut Velocity,
+            &Velocity,
         ),
         With<Player>,
     >,
     time: Res<Time>,
 ) {
-    if let Ok((action, mut controller, mut velocity)) = player_query.get_single_mut() {
+    if let Ok((action, mut controller, velocity)) = player_query.get_single_mut() {
+        let mut velocity = velocity.linvel;
+
         if action.just_pressed(&Action::Jump) {
-            velocity.linvel.y = MAX_SPEED;
-        } else if action.just_pressed(&Action::Fall) {
-            velocity.linvel.y = -MAX_SPEED;
-        } else if action.pressed(&Action::Left) {
-            velocity.linvel.x -= ACCELERATION;
-        } else if action.pressed(&Action::Right) {
-            velocity.linvel.x += ACCELERATION;
+            velocity.y = V_0;
+        } else {
+            velocity.y += GRAVITY * time.delta_seconds();
         }
-        velocity.linvel.x = velocity.linvel.x.clamp(-MAX_SPEED, MAX_SPEED);
-        let translation_change = velocity.linvel * time.delta_seconds();
+
+        if action.pressed(&Action::Left) {
+            velocity.x = -V_X;
+        } else if action.pressed(&Action::Right) {
+            velocity.x = V_X;
+        }
+
+        if action.just_released(&Action::Left) || action.just_released(&Action::Right) {
+            velocity.x = 0.;
+        }
+
+        let translation_change = velocity * time.delta_seconds();
         controller.translation = match controller.translation {
             Some(existing_translation) => Some(existing_translation + translation_change),
             None => Some(translation_change),
