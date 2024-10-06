@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_ecs_ldtk::prelude::*;
-use bevy_rapier2d::prelude::KinematicCharacterController;
+use bevy_rapier2d::prelude::*;
+
 use leafwing_input_manager::InputManagerBundle;
 
 use crate::animation::components::{AnimationIndices, AnimationTimer};
@@ -53,6 +54,12 @@ fn input_manager(_: &EntityInstance) -> InputManagerBundle<Action> {
 fn character_controller(_: &EntityInstance) -> KinematicCharacterController {
     KinematicCharacterController {
         apply_impulse_to_dynamic_bodies: true,
+        snap_to_ground: Some(CharacterLength::Absolute(0.5)),
+        autostep: Some(CharacterAutostep {
+            max_height: CharacterLength::Relative(0.3),
+            min_width: CharacterLength::Relative(0.5),
+            include_dynamic_bodies: true,
+        }),
         ..default()
     }
 }
