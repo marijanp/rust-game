@@ -4,8 +4,8 @@ pub mod systems;
 use crate::{AppState, GameState};
 use bevy::prelude::*;
 
-const PLAYER_WIDTH: f32 = 32.0;
-const PLAYER_HEIGHT: f32 = 32.0;
+pub const PLAYER_WIDTH: f32 = 32.0;
+pub const PLAYER_HEIGHT: f32 = 32.0;
 
 pub struct PlayerPlugin;
 
@@ -13,11 +13,7 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
             Update,
-            (
-                systems::move_player,
-                systems::collect_fruits,
-                systems::limit_player_movement,
-            )
+            (systems::move_player, systems::collect_fruits)
                 .chain()
                 .run_if(in_state(GameState::Running)),
         )

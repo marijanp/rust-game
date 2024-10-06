@@ -1,15 +1,11 @@
 use bevy::prelude::*;
-use bevy::window::PrimaryWindow;
 use bevy_rapier2d::prelude::*;
 use std::collections::HashMap;
 
 use leafwing_input_manager::prelude::*;
 
 use crate::fruit::components::Fruit;
-use crate::player::{
-    components::{Movement, Player},
-    PLAYER_HEIGHT, PLAYER_WIDTH,
-};
+use crate::player::components::{Movement, Player};
 use crate::{Action, Tilesets};
 
 pub fn load_player_tilesets(
@@ -78,40 +74,6 @@ pub fn move_player(
             Some(existing_translation) => Some(existing_translation + translation_change),
             None => Some(translation_change),
         };
-    }
-}
-
-pub fn limit_player_movement(
-    mut player_transform_query: Query<&mut Transform, With<Player>>,
-    window_query: Query<&Window, With<PrimaryWindow>>,
-) {
-    let window = window_query.get_single().unwrap();
-
-    const HALF_PLAYER_WIDTH: f32 = PLAYER_WIDTH / 2.0;
-    const X_MIN: f32 = 0.0 + HALF_PLAYER_WIDTH;
-    let x_max = window.width() - HALF_PLAYER_WIDTH;
-
-    const HALF_PLAYER_HEIGHT: f32 = PLAYER_HEIGHT / 2.0;
-    const Y_MIN: f32 = 0.0 + HALF_PLAYER_HEIGHT;
-    let y_max = window.height() - HALF_PLAYER_HEIGHT;
-
-    for mut transform in player_transform_query.iter_mut() {
-        let mut translation = transform.translation;
-
-        // Bound the enemy x position
-        if translation.x < X_MIN {
-            translation.x = X_MIN;
-        } else if translation.x > x_max {
-            translation.x = x_max;
-        }
-        // Bound the enemy y position
-        if translation.y < Y_MIN {
-            translation.y = Y_MIN;
-        } else if translation.y > y_max {
-            translation.y = y_max;
-        }
-
-        transform.translation = translation;
     }
 }
 
