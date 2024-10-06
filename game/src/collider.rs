@@ -23,7 +23,7 @@ impl From<&EntityInstance> for ColliderBundle {
             },
             "Player" => ColliderBundle {
                 collider: Collider::cuboid(9., 15.95),
-                rigid_body: RigidBody::Dynamic,
+                rigid_body: RigidBody::KinematicPositionBased,
                 active_events: ActiveEvents::COLLISION_EVENTS,
                 rotation_constraints: LockedAxes::ROTATION_LOCKED_Z,
                 ..default()
