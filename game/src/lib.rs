@@ -51,7 +51,7 @@ impl Plugin for GamePlugin {
                 OnEnter(AppState::InGame),
                 (spawn_ground, player::systems::load_player_tilesets),
             )
-            .add_systems(Update, (touch_system, add_ground_collider));
+            .add_systems(Update, (touch_system, add_ground_collider, update_camera));
         #[cfg(debug_assertions)]
         app.add_plugins(RapierDebugRenderPlugin::default());
     }
@@ -108,6 +108,25 @@ pub fn spawn_camera(mut commands: Commands, window_query: Query<&Window, With<Pr
         transform: Transform::from_xyz(window.width() / 2.0, window.height() / 2.0, 0.0),
         ..default()
     });
+}
+
+fn update_camera(
+    mut camera: Query<&mut Transform, (With<Camera2d>, Without<Player>)>,
+    player: Query<&Transform, (With<Player>, Without<Camera2d>)>,
+    time: Res<Time>,
+) {
+    if let (Ok(mut camera), Ok(player)) = (camera.get_single_mut(), player.get_single()) {
+        let Vec3 { x, y, .. } = player.translation;
+        let direction = Vec3::new(x, y, camera.translation.z);
+        // Applies a smooth effect to camera movement using interpolation between
+        // the camera position and the player position on the x and y axes.
+        // Here we use the in-game time, to get the elapsed time (in seconds)
+        // since the previous update. This avoids jittery movement when tracking
+        // the player.
+        camera.translation = camera
+            .translation
+            .lerp(direction, time.delta_seconds() * 2.);
+    }
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Debug, Default, Component)]
