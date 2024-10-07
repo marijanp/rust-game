@@ -16,7 +16,7 @@ impl From<&EntityInstance> for ColliderBundle {
         match entity_instance.identifier.as_ref() {
             "Cherry" => ColliderBundle {
                 collider: Collider::ball(8.),
-                rigid_body: RigidBody::Dynamic,
+                rigid_body: RigidBody::Fixed,
                 active_events: ActiveEvents::COLLISION_EVENTS,
                 rotation_constraints: LockedAxes::ROTATION_LOCKED_Z,
                 ..default()
