@@ -119,9 +119,13 @@
             LD_LIBRARY_PATH = "$LD_LIBRARY_PATH:${lib.makeLibraryPath commonAttrs.buildInputs}";
             # wasm
             CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_LINKER = "lld";
-            packages = [
-              pkgs.lld
-            ] ++ lib.optionals pkgs.stdenv.isLinux [ pkgs.ldtk ];
+            packages =
+              [
+                pkgs.lld
+              ]
+              ++ lib.optionals pkgs.stdenv.isLinux [
+                pkgs.blender
+              ];
           };
 
           packages = {

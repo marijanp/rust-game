@@ -1,4 +1,3 @@
-pub mod animation;
 pub mod cli;
 pub mod collider;
 pub mod color;
@@ -10,76 +9,16 @@ pub mod world;
 
 use crate::cli::CliArgs;
 use crate::collider::ColliderBundle;
-use crate::fruit::components::FruitBundle;
-use crate::player::components::{Player, PlayerBundle};
-use crate::world::components::GroundBundle;
+use crate::player::components::Player;
 
-use bevy::core_pipeline::bloom::BloomSettings;
 use bevy::prelude::*;
+use bevy::render::camera::ScalingMode;
 use bevy::window::PrimaryWindow;
-use bevy_ecs_ldtk::prelude::*;
-use bevy_rapier2d::prelude::*;
+#[cfg(debug_assertions)]
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use bevy_rapier3d::prelude::*;
+use bevy_spritesheet_animation::prelude::SpritesheetAnimationPlugin;
 use leafwing_input_manager::prelude::*;
-use std::collections::HashMap;
-
-/// Runs the game given the cli arguments parameters.
-pub fn run(CliArgs { listen_address }: CliArgs) {
-    tracing::info!("Game started {listen_address:?}");
-    App::new()
-        .add_plugins(DefaultPlugins)
-        .insert_state(AppState::MainMenu)
-        .add_plugins(main_menu::MainMenuPlugin)
-        .add_plugins(GamePlugin)
-        .add_systems(Startup, spawn_camera)
-        .run();
-}
-
-pub struct GamePlugin;
-impl Plugin for GamePlugin {
-    fn build(&self, app: &mut App) {
-        app.insert_state(GameState::Paused)
-            .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(16.0))
-            .add_plugins(InputManagerPlugin::<Action>::default())
-            .add_plugins(LdtkPlugin)
-            .insert_resource(LevelSelection::index(0))
-            .register_ldtk_entity::<FruitBundle>("Cherry")
-            .register_ldtk_entity::<PlayerBundle>("Player")
-            .register_ldtk_int_cell::<GroundBundle>(1)
-            .add_plugins(world::WorldPlugin)
-            .add_plugins(animation::AnimationPlugin)
-            .add_plugins(player::PlayerPlugin)
-            .add_plugins(fruit::FruitPlugin)
-            .add_plugins(ui::UiPlugin)
-            .insert_resource(Tilesets::<player::components::Movement>::default())
-            .add_systems(Update, (touch_system, update_camera));
-        #[cfg(debug_assertions)]
-        app.add_plugins(RapierDebugRenderPlugin::default());
-    }
-}
-
-#[derive(Actionlike, PartialEq, Eq, Hash, Clone, Copy, Debug, Reflect)]
-pub enum Action {
-    Left,
-    Right,
-    Jump,
-    Fall,
-}
-
-impl Action {
-    pub fn player_one() -> InputMap<Action> {
-        InputMap::new([
-            (Action::Left, KeyCode::KeyA),
-            (Action::Left, KeyCode::ArrowLeft),
-            (Action::Right, KeyCode::KeyD),
-            (Action::Right, KeyCode::ArrowRight),
-            (Action::Jump, KeyCode::KeyW),
-            (Action::Jump, KeyCode::Space),
-            (Action::Jump, KeyCode::ArrowUp),
-            (Action::Fall, KeyCode::KeyS),
-            (Action::Fall, KeyCode::ArrowDown),
-        ])
-    }
-}
 
 #[derive(States, Clone, Debug, Copy, PartialEq, Eq, Hash, Default)]
 pub enum AppState {
@@ -96,6 +35,64 @@ pub enum GameState {
     Paused,
 }
 
+/// Runs the game given the cli arguments parameter
+pub fn run(CliArgs { listen_address }: CliArgs) {
+    tracing::info!("Game started {listen_address:?}");
+    App::new()
+        // default_nearest disables linear texture filtering, we need this because of pixel art
+        .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
+        .insert_state(AppState::MainMenu)
+        .add_plugins(main_menu::MainMenuPlugin)
+        .add_plugins(GamePlugin)
+        .run();
+}
+
+pub struct GamePlugin;
+impl Plugin for GamePlugin {
+    fn build(&self, app: &mut App) {
+        app.insert_state(GameState::Paused)
+            //.add_plugins(RapierPhysicsPlugin::<NoUserData>::with_length_unit(16.0))
+            .add_systems(Startup, spawn_camera)
+            .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
+            .add_plugins(InputManagerPlugin::<Input>::default())
+            .add_plugins(SpritesheetAnimationPlugin)
+            .add_plugins(ui::UiPlugin)
+            .add_plugins(world::WorldPlugin)
+            .add_plugins(player::PlayerPlugin)
+            .add_plugins(fruit::FruitPlugin)
+            .add_systems(Update, (touch_system, update_camera));
+        #[cfg(debug_assertions)]
+        app.add_plugins(RapierDebugRenderPlugin::default())
+            .add_plugins(WorldInspectorPlugin::new());
+    }
+}
+
+#[derive(Actionlike, PartialEq, Eq, Hash, Clone, Copy, Debug, Reflect)]
+pub enum Input {
+    Up,
+    Down,
+    Left,
+    Right,
+    Jump,
+    Fall,
+}
+
+impl Input {
+    pub fn player_one() -> InputMap<Input> {
+        InputMap::new([
+            (Input::Up, KeyCode::KeyW),
+            (Input::Up, KeyCode::ArrowUp),
+            (Input::Down, KeyCode::KeyS),
+            (Input::Down, KeyCode::ArrowDown),
+            (Input::Left, KeyCode::KeyA),
+            (Input::Left, KeyCode::ArrowLeft),
+            (Input::Right, KeyCode::KeyD),
+            (Input::Right, KeyCode::ArrowRight),
+            (Input::Jump, KeyCode::Space),
+        ])
+    }
+}
+
 pub fn spawn_camera(mut commands: Commands, window_query: Query<&Window, With<PrimaryWindow>>) {
     let window = window_query.get_single().unwrap();
     let width = window.width();
@@ -104,27 +101,34 @@ pub fn spawn_camera(mut commands: Commands, window_query: Query<&Window, With<Pr
     let physical_height = window.physical_height();
     info!("logical: {width}x{height}");
     info!("physical: {physical_width}x{physical_height}");
-    commands.spawn((
-        Camera2dBundle {
-            camera: Camera {
-                hdr: true, // HDR is required for the bloom effect
-                ..default()
-            },
-            transform: Transform::from_xyz(window.width() / 2.0, window.height() / 2.0, 0.0),
+    // light
+    commands.spawn(DirectionalLightBundle {
+        transform: Transform::from_xyz(0., 0., 10.).looking_at(Vec3::ZERO, Vec3::Y),
+        ..default()
+    });
+    // camera
+    commands.spawn(Camera3dBundle {
+        projection: OrthographicProjection {
+            scaling_mode: ScalingMode::WindowSize(64.),
             ..default()
-        },
-        BloomSettings::NATURAL,
-    ));
+        }
+        .into(),
+        transform: Transform::from_xyz(0., 3.6, 10.).looking_at(Vec3::ZERO, Vec3::Y),
+        ..default()
+    });
 }
 
 fn update_camera(
-    mut camera: Query<&mut Transform, (With<Camera2d>, Without<Player>)>,
-    player: Query<&Transform, (With<Player>, Without<Camera2d>)>,
+    mut camera: Query<&mut Transform, (With<Camera3d>, Without<Player>)>,
+    player: Query<&Transform, (With<Player>, Without<Camera3d>)>,
     time: Res<Time>,
 ) {
     if let (Ok(mut camera), Ok(player)) = (camera.get_single_mut(), player.get_single()) {
-        let Vec3 { x, y, .. } = player.translation;
-        let direction = Vec3::new(x, y, camera.translation.z);
+        let direction = Vec3::new(
+            player.translation.x,
+            camera.translation.y,
+            camera.translation.z,
+        );
         // Applies a smooth effect to camera movement using interpolation between
         // the camera position and the player position on the x and y axes.
         // Here we use the in-game time, to get the elapsed time (in seconds)
@@ -139,7 +143,7 @@ fn update_camera(
 fn touch_system(
     touches: Res<Touches>,
     window_query: Query<&Window, With<PrimaryWindow>>,
-    mut action_state_query: Query<&mut ActionState<Action>>,
+    mut action_state_query: Query<&mut ActionState<Input>>,
     player_query: Query<&Transform, With<Player>>,
 ) {
     let window = window_query.get_single().unwrap();
@@ -149,29 +153,26 @@ fn touch_system(
                 .iter()
                 .any(|touch| touch.position().x < player.translation.x)
             {
-                action_state.press(&Action::Left);
+                action_state.press(&Input::Left);
             } else if touches
                 .iter()
                 .any(|touch| touch.position().x >= player.translation.x)
             {
-                action_state.press(&Action::Right);
+                action_state.press(&Input::Right);
             }
             if touches.iter().count() + touches.iter_just_pressed().count() >= 2 {
                 if touches
                     .iter_just_pressed()
                     .any(|touch| touch.position().y < window.height() / 2.)
                 {
-                    action_state.press(&Action::Jump);
+                    action_state.press(&Input::Up);
                 } else if touches
                     .iter_just_pressed()
                     .any(|touch| touch.position().y >= window.height() / 2.)
                 {
-                    action_state.press(&Action::Fall);
+                    action_state.press(&Input::Down);
                 }
             }
         }
     };
 }
-
-#[derive(Default, Deref, Resource)]
-pub struct Tilesets<T>(pub HashMap<T, Handle<Image>>);

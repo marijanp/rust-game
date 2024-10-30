@@ -1,78 +1,140 @@
 use bevy::prelude::*;
-use bevy_rapier2d::prelude::*;
-use std::collections::HashMap;
-
+use bevy_rapier3d::prelude::*;
+use bevy_spritesheet_animation::prelude::*;
 use leafwing_input_manager::prelude::*;
 
+use crate::collider::ColliderBundle;
 use crate::fruit::components::Fruit;
-use crate::player::components::{Movement, Player};
-use crate::{Action, Tilesets};
+use crate::player::components::{Player, PlayerBundle};
+use crate::Input;
 
-pub fn load_player_tilesets(
+pub fn spawn(
+    mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut tileset: ResMut<Tilesets<Movement>>,
+    mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
+    mut library: ResMut<AnimationLibrary>,
 ) {
-    let idle_tileset = asset_server.load("Main Characters/Mask Dude/Idle (32x32).png");
-    let run_tileset = asset_server.load("Main Characters/Mask Dude/Run (32x32).png");
-    let jump_tileset = asset_server.load("Main Characters/Mask Dude/Jump (32x32).png");
-    let fall_tileset = asset_server.load("Main Characters/Mask Dude/Fall (32x32).png");
-    *tileset = Tilesets(HashMap::from([
-        (Movement::Idle, idle_tileset),
-        (Movement::Run, run_tileset),
-        (Movement::Jump, jump_tileset),
-        (Movement::Fall, fall_tileset),
-    ]));
+    let texture = asset_server.load("player.png");
+
+    let spritesheet = Spritesheet::new(4, 1);
+    let clip = Clip::from_frames(spritesheet.row(0));
+    let clip_id = library.register_clip(clip);
+    let animation = Animation::from_clip(clip_id);
+    let animation_id = library.register_animation(animation);
+
+    let layout = texture_atlas_layouts.add(spritesheet.atlas_layout(128, 128));
+
+    commands.spawn(PlayerBundle {
+        player: Player,
+        name: Name::new("Player"),
+        sprite_bundle: Sprite3dBuilder::from_image(texture)
+            .with_atlas(layout)
+            .with_transform(Transform::from_xyz(1., 4., 1.))
+            .with_custom_size(Vec2::new(1., 1.))
+            .build(),
+        sprite_sheet_animation: SpritesheetAnimation::from_id(animation_id),
+        collider_bundle: ColliderBundle {
+            collider: Collider::round_cylinder(0.4, 0.1, 0.1),
+            rigid_body: RigidBody::KinematicPositionBased,
+            active_events: ActiveEvents::COLLISION_EVENTS,
+            ..default()
+        },
+        character_controller: KinematicCharacterController {
+            custom_mass: Some(10.0),
+            up: Vec3::Y,
+            offset: CharacterLength::Absolute(0.01),
+            slide: true,
+            autostep: Some(CharacterAutostep {
+                max_height: CharacterLength::Relative(0.3),
+                min_width: CharacterLength::Relative(0.5),
+                include_dynamic_bodies: false,
+            }),
+            // Don’t allow climbing slopes larger than 45 degrees.
+            max_slope_climb_angle: 45.0_f32.to_radians(),
+            // Automatically slide down on slopes smaller than 30 degrees.
+            min_slope_slide_angle: 30.0_f32.to_radians(),
+            apply_impulse_to_dynamic_bodies: true,
+            snap_to_ground: Some(CharacterLength::Absolute(0.5)),
+            ..default()
+        },
+        input_manager: InputManagerBundle {
+            input_map: Input::player_one(),
+            ..default()
+        },
+    });
 }
 
-pub fn despawn(mut commands: Commands, enemy_entity_query: Query<Entity, With<Player>>) {
-    if let Ok(player_entity) = enemy_entity_query.get_single() {
-        commands.entity(player_entity).despawn();
+pub fn despawn(mut commands: Commands, player_query: Query<Entity, With<Player>>) {
+    if let Ok(player) = player_query.get_single() {
+        commands.entity(player).despawn();
     }
 }
 
 // http://www.mathforgameprogrammers.com/gdc2016/GDC2016_Pittman_Kyle_BuildingABetterJump.pdf
-const METER: f32 = 16.;
-const V_X: f32 = 10. * METER;
-const HEIGHT: f32 = 5. * METER;
-const DISTANCE_AT_HEIGHT: f32 = 2.5 * METER;
+const GRAVITY: f32 = -9.81;
+const V: f32 = 3.;
 
-const V_0: f32 = (2. * HEIGHT * V_X) / DISTANCE_AT_HEIGHT;
-const GRAVITY: f32 = (-2. * HEIGHT * (V_X * V_X)) / (DISTANCE_AT_HEIGHT * DISTANCE_AT_HEIGHT);
+type CharacterController<'a> = (
+    &'a ActionState<Input>,
+    &'a mut KinematicCharacterController,
+    Option<&'a KinematicCharacterControllerOutput>,
+);
 
 pub fn move_player(
-    mut player_query: Query<
-        (
-            &ActionState<Action>,
-            &mut KinematicCharacterController,
-            &Velocity,
-        ),
-        With<Player>,
-    >,
+    mut player_query: Query<CharacterController, With<Player>>,
     time: Res<Time>,
+    mut grounded_timer: Local<f32>,
 ) {
-    if let Ok((action, mut controller, velocity)) = player_query.get_single_mut() {
-        let mut velocity = velocity.linvel;
+    if let Ok((action, mut controller, output)) = player_query.get_single_mut() {
+        let mut translation = Vec3::ZERO;
 
-        if action.just_pressed(&Action::Jump) {
-            velocity.y = V_0;
+        // if we are grounded
+        if output.map_or(false, |output| output.grounded) {
+            translation.y = 0.;
+            *grounded_timer = 0.8;
+        }
+
+        if *grounded_timer > 0. {
+            *grounded_timer -= time.delta_seconds();
+            if action.just_pressed(&Input::Jump) {
+                translation.y = 20.;
+            }
         } else {
-            velocity.y += GRAVITY * time.delta_seconds();
+            translation.y += GRAVITY * time.delta_seconds() * controller.custom_mass.unwrap_or(1.);
         }
 
-        if action.pressed(&Action::Left) {
-            velocity.x = -V_X;
-        } else if action.pressed(&Action::Right) {
-            velocity.x = V_X;
+        if action.pressed(&Input::Left) {
+            translation.x = -V;
+        } else if action.pressed(&Input::Right) {
+            translation.x = V;
         }
 
-        if action.just_released(&Action::Left) || action.just_released(&Action::Right) {
-            velocity.x = 0.;
+        if action.just_released(&Input::Left) || action.just_released(&Input::Right) {
+            translation.x = 0.;
         }
 
-        let translation_change = velocity * time.delta_seconds();
+        if action.pressed(&Input::Up) {
+            translation.z = -V;
+        } else if action.pressed(&Input::Down) {
+            translation.z = V;
+        }
+
+        if action.just_released(&Input::Up) || action.just_released(&Input::Down) {
+            translation.z = 0.;
+        }
+
+        let translation_change = translation * time.delta_seconds();
+
         controller.translation = match controller.translation {
-            Some(existing_translation) => Some(existing_translation + translation_change),
-            None => Some(translation_change),
+            Some(existing_translation) => {
+                //info!("change: {translation_change}");
+                //info!("existing: {existing_translation}");
+                Some(existing_translation + translation_change)
+            }
+            None => {
+                //info!("change: {translation_change}");
+                Some(translation_change)
+            }
         };
     }
 }
