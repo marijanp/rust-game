@@ -26,7 +26,7 @@ pub fn spawn(
             ..default()
         },
         RigidBody::Fixed,
-        Collider::cuboid(GROUND_LENGTH / 2., 0.01, GROUND_WIDTH / 2.),
+        Collider::cuboid(GROUND_LENGTH / 2., 0.05, GROUND_WIDTH / 2.),
     ));
 
     commands.spawn((
