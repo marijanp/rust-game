@@ -16,13 +16,25 @@ pub fn spawn(
 ) {
     let texture = asset_server.load("player.png");
 
-    let spritesheet = Spritesheet::new(4, 1);
-    let clip = Clip::from_frames(spritesheet.row(0));
-    let clip_id = library.register_clip(clip);
-    let animation = Animation::from_clip(clip_id);
-    let animation_id = library.register_animation(animation);
+    let spritesheet = Spritesheet::new(12, 8);
 
-    let layout = texture_atlas_layouts.add(spritesheet.atlas_layout(128, 128));
+    // Idle
+    let idle_clip = Clip::from_frames(spritesheet.horizontal_strip(0,2,12));
+    let idle_clip_id = library.register_clip(idle_clip);
+    let idle_animation = Animation::from_clip(idle_clip_id);
+    let idle_animation_id = library.register_animation(idle_animation);
+    library.name_animation(idle_animation_id, "idle").unwrap();
+
+    // Run
+    let walk_clip = Clip::from_frames(spritesheet.horizontal_strip(0,6,8));
+    let walk_clip_id = library.register_clip(walk_clip);
+    let walk_blink_clip = Clip::from_frames(spritesheet.horizontal_strip(0,7,8));
+    let walk_blink_clip_id = library.register_clip(walk_blink_clip);
+    let animation = Animation::from_clips([walk_clip_id, walk_blink_clip_id]);
+    let animation_id = library.register_animation(animation);
+    library.name_animation(animation_id, "walk").unwrap();
+
+    let layout = texture_atlas_layouts.add(spritesheet.atlas_layout(24, 24));
 
     commands.spawn(PlayerBundle {
         player: Player,
@@ -32,7 +44,7 @@ pub fn spawn(
             .with_transform(Transform::from_xyz(1., 4., 1.))
             .with_custom_size(Vec2::new(1., 1.))
             .build(),
-        sprite_sheet_animation: SpritesheetAnimation::from_id(animation_id),
+        sprite_sheet_animation: SpritesheetAnimation::from_id(idle_animation_id),
         collider_bundle: ColliderBundle {
             collider: Collider::round_cylinder(0.4, 0.1, 0.1),
             rigid_body: RigidBody::KinematicPositionBased,
@@ -79,6 +91,33 @@ type CharacterController<'a> = (
     &'a mut KinematicCharacterController,
     Option<&'a KinematicCharacterControllerOutput>,
 );
+
+const DELTA: f32 = 0.1;
+
+pub fn change_player_animation(
+    library: Res<AnimationLibrary>,
+    mut query: Query<(&Velocity, &mut Sprite3d, &mut SpritesheetAnimation), With<Player>>
+)
+{
+    for (velocity, mut sprite, mut animation) in query.iter_mut() {
+        if (-DELTA..=DELTA).contains(&velocity.linvel.x) && (-DELTA..=DELTA).contains(&velocity.linvel.z) {
+            if let Some(idle_animation_id) = library.animation_with_name("idle") {
+                if animation.animation_id != idle_animation_id {
+                    animation.switch(idle_animation_id);
+                }
+            }
+        } else if let Some(run_animation_id) = library.animation_with_name("walk") {
+            if animation.animation_id != run_animation_id {
+                animation.switch(run_animation_id);
+            }
+        }
+        if velocity.linvel.x > DELTA {
+            sprite.flip_x = false;
+        } else if velocity.linvel.x < -DELTA {
+            sprite.flip_x = true;
+        }
+    }
+}
 
 pub fn move_player(
     mut player_query: Query<CharacterController, With<Player>>,
