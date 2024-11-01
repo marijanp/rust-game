@@ -1,6 +1,7 @@
 pub mod cli;
 pub mod collider;
 pub mod color;
+pub mod enemy;
 pub mod fruit;
 pub mod main_menu;
 pub mod player;
@@ -60,6 +61,7 @@ impl Plugin for GamePlugin {
             .add_plugins(world::WorldPlugin)
             .add_plugins(player::PlayerPlugin)
             .add_plugins(fruit::FruitPlugin)
+            .add_plugins(enemy::EnemyPlugin)
             .add_systems(Update, (touch_system, update_camera));
         #[cfg(debug_assertions)]
         app.add_plugins(RapierDebugRenderPlugin::default())
