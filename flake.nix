@@ -125,6 +125,8 @@
               ]
               ++ lib.optionals pkgs.stdenv.isLinux [
                 pkgs.blender
+                pkgs.libresprite
+                pkgs.gimp
               ];
           };
 
