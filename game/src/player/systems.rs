@@ -5,7 +5,7 @@ use leafwing_input_manager::prelude::*;
 
 use crate::collider::ColliderBundle;
 use crate::fruit::components::Fruit;
-use crate::player::components::{Player, PlayerBundle};
+use crate::player::components::{Movement, Player, PlayerBundle};
 use crate::Input;
 
 pub fn spawn(
@@ -102,17 +102,7 @@ pub fn despawn(mut commands: Commands, player_query: Query<Entity, With<Player>>
     }
 }
 
-// http://www.mathforgameprogrammers.com/gdc2016/GDC2016_Pittman_Kyle_BuildingABetterJump.pdf
-const GRAVITY: f32 = -9.81;
-const V: f32 = 3.;
-
-type CharacterController<'a> = (
-    &'a ActionState<Input>,
-    &'a mut KinematicCharacterController,
-    Option<&'a KinematicCharacterControllerOutput>,
-);
-
-const DELTA: f32 = 0.1;
+const DELTA: f32 = 0.5;
 
 pub fn change_player_animation(
     library: Res<AnimationLibrary>,
@@ -139,62 +129,101 @@ pub fn change_player_animation(
     }
 }
 
+type CharacterController<'a> = (
+    &'a ActionState<Input>,
+    &'a Velocity,
+    &'a mut Movement,
+    &'a mut KinematicCharacterController,
+    Option<&'a KinematicCharacterControllerOutput>,
+);
+
+// http://www.mathforgameprogrammers.com/gdc2016/GDC2016_Pittman_Kyle_BuildingABetterJump.pdf
+const V: f32 = 3.;
+
+const HEIGHT: f32 = 8.;
+const DISTANCE_AT_HEIGHT: f32 = 5.;
+
+const V_0: f32 = (2. * HEIGHT * V) / DISTANCE_AT_HEIGHT;
+const GRAVITY: f32 = (-2. * HEIGHT * (V * V)) / (DISTANCE_AT_HEIGHT * DISTANCE_AT_HEIGHT);
+
 pub fn move_player(
     mut player_query: Query<CharacterController, With<Player>>,
     time: Res<Time>,
     mut grounded_timer: Local<f32>,
 ) {
-    if let Ok((action, mut controller, output)) = player_query.get_single_mut() {
-        let mut translation = Vec3::ZERO;
+    if let Ok((action, velocity, mut movement, mut controller, output)) =
+        player_query.get_single_mut()
+    {
+        let mut velocity = velocity.linvel;
 
         // if we are grounded
         if output.map_or(false, |output| output.grounded) {
-            translation.y = 0.;
+            velocity.y = 0.;
             *grounded_timer = 0.8;
+        } else {
+            velocity.y += GRAVITY * time.delta_seconds() * controller.custom_mass.unwrap_or(1.);
         }
 
         if *grounded_timer > 0. {
             *grounded_timer -= time.delta_seconds();
             if action.just_pressed(&Input::Jump) {
-                translation.y = 20.;
+                velocity.y = V_0;
             }
-        } else {
-            translation.y += GRAVITY * time.delta_seconds() * controller.custom_mass.unwrap_or(1.);
         }
 
         if action.pressed(&Input::Left) {
-            translation.x = -V;
+            velocity.x = -V;
         } else if action.pressed(&Input::Right) {
-            translation.x = V;
+            velocity.x = V;
         }
 
         if action.just_released(&Input::Left) || action.just_released(&Input::Right) {
-            translation.x = 0.;
+            velocity.x = 0.;
         }
 
         if action.pressed(&Input::Up) {
-            translation.z = -V;
+            velocity.z = -V;
         } else if action.pressed(&Input::Down) {
-            translation.z = V;
+            velocity.z = V;
         }
 
         if action.just_released(&Input::Up) || action.just_released(&Input::Down) {
-            translation.z = 0.;
+            velocity.z = 0.;
         }
 
-        let translation_change = translation * time.delta_seconds();
+        // if the velocity in any direction is unsignificant, set it to zero
+        if (-DELTA..=DELTA).contains(&velocity.x) {
+            velocity.x = 0.;
+        }
+        if (-DELTA..=DELTA).contains(&velocity.z) {
+            velocity.z = 0.;
+        }
+        if (-DELTA..=DELTA).contains(&velocity.y) {
+            velocity.y = 0.;
+        }
 
-        controller.translation = match controller.translation {
-            Some(existing_translation) => {
-                //info!("change: {translation_change}");
-                //info!("existing: {existing_translation}");
-                Some(existing_translation + translation_change)
+        let is_moving = !((-DELTA..=DELTA).contains(&velocity.x)
+            && (-DELTA..=DELTA).contains(&velocity.z)
+            && (-DELTA..=DELTA).contains(&velocity.y));
+
+        if *movement != Movement::Jab {
+            if action.just_pressed(&Input::LightPunch) {
+                *movement = Movement::Jab;
+            } else if !is_moving {
+                *movement = Movement::Idle;
+            } else {
+                *movement = Movement::Walk;
             }
-            None => {
-                //info!("change: {translation_change}");
-                Some(translation_change)
-            }
-        };
+        }
+
+        if is_moving {
+            let translation_change =
+                velocity * time.delta_seconds() + 0.5 * GRAVITY * time.delta_seconds().powi(2);
+            controller.translation = match controller.translation {
+                Some(existing_translation) => Some(existing_translation + translation_change),
+                None => Some(translation_change),
+            };
+        }
     }
 }
 
