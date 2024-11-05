@@ -14,7 +14,12 @@ impl Plugin for PlayerPlugin {
         app.add_systems(OnEnter(AppState::InGame), systems::spawn)
             .add_systems(
                 Update,
-                (systems::move_player, systems::change_player_animation)
+                (
+                    systems::move_player,
+                    systems::player_animation_event,
+                    systems::change_player_animation,
+                )
+                    .chain()
                     .run_if(in_state(GameState::Running)),
             )
             .add_systems(

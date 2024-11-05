@@ -77,6 +77,7 @@ pub enum Input {
     Right,
     Jump,
     Fall,
+    LightPunch,
 }
 
 impl Input {
@@ -91,6 +92,7 @@ impl Input {
             (Input::Right, KeyCode::KeyD),
             (Input::Right, KeyCode::ArrowRight),
             (Input::Jump, KeyCode::Space),
+            (Input::LightPunch, KeyCode::KeyJ),
         ])
     }
 }

@@ -59,6 +59,7 @@ pub fn spawn(
     commands.spawn(PlayerBundle {
         player: Player,
         name: Name::new("Player"),
+        movement: Movement::Idle,
         sprite_bundle: Sprite3dBuilder::from_image(texture)
             .with_atlas(layout)
             .with_transform(Transform::from_xyz(1., 4., 1.))
@@ -126,6 +127,31 @@ pub fn change_player_animation(
             sprite.flip_x = false;
         } else if velocity.linvel.x < -DELTA {
             sprite.flip_x = true;
+        }
+    }
+}
+
+pub fn player_animation_event(
+    mut events: EventReader<AnimationEvent>,
+    library: Res<AnimationLibrary>,
+    mut player_query: Query<&mut Movement, With<Player>>,
+) {
+    for event in events.read() {
+        match event {
+            AnimationEvent::ClipEnd { animation_id, .. } => {
+                if let Some(jab_animation_id) =
+                    library.animation_with_name(Movement::Jab.to_string())
+                {
+                    if *animation_id == jab_animation_id {
+                        if let Ok(mut movement) = player_query.get_single_mut() {
+                            if *movement == Movement::Jab || *movement == Movement::Hook {
+                                *movement = Movement::Idle
+                            }
+                        }
+                    }
+                }
+            }
+            _event => (),
         }
     }
 }
