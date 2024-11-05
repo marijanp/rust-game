@@ -14,27 +14,47 @@ pub fn spawn(
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
     mut library: ResMut<AnimationLibrary>,
 ) {
-    let texture = asset_server.load("player.png");
+    let texture = asset_server.load("bouncer2.png");
 
-    let spritesheet = Spritesheet::new(12, 8);
+    let spritesheet = Spritesheet::new(57, 1);
 
     // Idle
-    let idle_clip = Clip::from_frames(spritesheet.horizontal_strip(0,2,12));
+    let idle_clip = Clip::from_frames(spritesheet.horizontal_strip(0, 0, 12));
     let idle_clip_id = library.register_clip(idle_clip);
     let idle_animation = Animation::from_clip(idle_clip_id);
     let idle_animation_id = library.register_animation(idle_animation);
-    library.name_animation(idle_animation_id, "idle").unwrap();
+    library
+        .name_animation(idle_animation_id, Movement::Idle.to_string())
+        .unwrap();
 
     // Run
-    let walk_clip = Clip::from_frames(spritesheet.horizontal_strip(0,6,8));
+    let walk_clip = Clip::from_frames(spritesheet.horizontal_strip(24, 0, 16));
     let walk_clip_id = library.register_clip(walk_clip);
-    let walk_blink_clip = Clip::from_frames(spritesheet.horizontal_strip(0,7,8));
-    let walk_blink_clip_id = library.register_clip(walk_blink_clip);
-    let animation = Animation::from_clips([walk_clip_id, walk_blink_clip_id]);
+    let animation = Animation::from_clip(walk_clip_id);
     let animation_id = library.register_animation(animation);
-    library.name_animation(animation_id, "walk").unwrap();
+    library
+        .name_animation(animation_id, Movement::Walk.to_string())
+        .unwrap();
 
-    let layout = texture_atlas_layouts.add(spritesheet.atlas_layout(24, 24));
+    // Jab
+    let jab_clip = Clip::from_frames(spritesheet.horizontal_strip(40, 0, 3));
+    let jab_clip_id = library.register_clip(jab_clip);
+    let jab_animation = Animation::from_clip(jab_clip_id);
+    let jab_animation_id = library.register_animation(jab_animation);
+    library
+        .name_animation(jab_animation_id, Movement::Jab.to_string())
+        .unwrap();
+
+    // Hook
+    let hook_clip = Clip::from_frames(spritesheet.horizontal_strip(43, 0, 5));
+    let hook_clip_id = library.register_clip(hook_clip);
+    let hook_animation = Animation::from_clip(hook_clip_id);
+    let hook_animation_id = library.register_animation(hook_animation);
+    library
+        .name_animation(hook_animation_id, Movement::Hook.to_string())
+        .unwrap();
+
+    let layout = texture_atlas_layouts.add(spritesheet.atlas_layout(32, 32));
 
     commands.spawn(PlayerBundle {
         player: Player,
