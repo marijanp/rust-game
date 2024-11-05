@@ -106,19 +106,20 @@ const DELTA: f32 = 0.5;
 
 pub fn change_player_animation(
     library: Res<AnimationLibrary>,
-    mut query: Query<(&Velocity, &mut Sprite3d, &mut SpritesheetAnimation), With<Player>>
-)
-{
-    for (velocity, mut sprite, mut animation) in query.iter_mut() {
-        if (-DELTA..=DELTA).contains(&velocity.linvel.x) && (-DELTA..=DELTA).contains(&velocity.linvel.z) {
-            if let Some(idle_animation_id) = library.animation_with_name("idle") {
-                if animation.animation_id != idle_animation_id {
-                    animation.switch(idle_animation_id);
-                }
-            }
-        } else if let Some(run_animation_id) = library.animation_with_name("walk") {
-            if animation.animation_id != run_animation_id {
-                animation.switch(run_animation_id);
+    mut query: Query<
+        (
+            &Velocity,
+            &Movement,
+            &mut Sprite3d,
+            &mut SpritesheetAnimation,
+        ),
+        With<Player>,
+    >,
+) {
+    for (velocity, movement, mut sprite, mut animation) in query.iter_mut() {
+        if let Some(animation_id) = library.animation_with_name(movement.to_string()) {
+            if animation.animation_id != animation_id {
+                animation.switch(animation_id);
             }
         }
         if velocity.linvel.x > DELTA {
