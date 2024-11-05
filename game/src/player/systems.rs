@@ -144,7 +144,18 @@ pub fn player_animation_event(
                 {
                     if *animation_id == jab_animation_id {
                         if let Ok(mut movement) = player_query.get_single_mut() {
-                            if *movement == Movement::Jab || *movement == Movement::Hook {
+                            if *movement == Movement::Jab {
+                                *movement = Movement::Idle
+                            }
+                        }
+                    }
+                }
+                if let Some(hook_animation_id) =
+                    library.animation_with_name(Movement::Hook.to_string())
+                {
+                    if *animation_id == hook_animation_id {
+                        if let Ok(mut movement) = player_query.get_single_mut() {
+                            if *movement == Movement::Hook {
                                 *movement = Movement::Idle
                             }
                         }
@@ -233,9 +244,11 @@ pub fn move_player(
             && (-DELTA..=DELTA).contains(&velocity.z)
             && (-DELTA..=DELTA).contains(&velocity.y));
 
-        if *movement != Movement::Jab {
+        if *movement != Movement::Jab && *movement != Movement::Hook {
             if action.just_pressed(&Input::LightPunch) {
                 *movement = Movement::Jab;
+            } else if action.just_pressed(&Input::Hook) {
+                *movement = Movement::Hook;
             } else if !is_moving {
                 *movement = Movement::Idle;
             } else {
