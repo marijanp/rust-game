@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use bevy_spritesheet_animation::prelude::*;
 
-
 use crate::ColliderBundle;
 
 #[derive(Default, Component)]
