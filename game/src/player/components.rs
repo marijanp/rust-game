@@ -16,12 +16,19 @@ pub enum Movement {
     Fall,
     Jab,
     Hook,
+    Uppercut,
 }
 
 impl fmt::Display for Movement {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         // Use the Debug implementation for Display
-        write!(f, "{:?}", self)
+        write!(formatter, "{:?}", self)
+    }
+}
+
+impl From<Movement> for String {
+    fn from(movement: Movement) -> Self {
+        movement.to_string()
     }
 }
 

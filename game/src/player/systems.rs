@@ -14,9 +14,9 @@ pub fn spawn(
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
     mut library: ResMut<AnimationLibrary>,
 ) {
-    let texture = asset_server.load("bouncer2.png");
+    let texture = asset_server.load("bouncer.png");
 
-    let spritesheet = Spritesheet::new(57, 1);
+    let spritesheet = Spritesheet::new(61, 1);
 
     // Idle
     let idle_clip = Clip::from_frames(spritesheet.horizontal_strip(0, 0, 12));
@@ -24,34 +24,66 @@ pub fn spawn(
     let idle_animation = Animation::from_clip(idle_clip_id);
     let idle_animation_id = library.register_animation(idle_animation);
     library
-        .name_animation(idle_animation_id, Movement::Idle.to_string())
+        .name_animation(idle_animation_id, Movement::Idle)
+        .unwrap();
+
+    // Jump
+    let jump_clip = Clip::from_frames(spritesheet.horizontal_strip(24, 0, 2));
+    let jump_clip_id = library.register_clip(jump_clip);
+    let mut animation = Animation::from_clip(jump_clip_id);
+    animation.set_repetitions(AnimationRepeat::Times(1));
+    let animation_id = library.register_animation(animation);
+    library
+        .name_animation(animation_id, Movement::Jump)
+        .unwrap();
+
+    // Fall
+    let fall_clip = Clip::from_frames(spritesheet.horizontal_strip(26, 0, 2));
+    let fall_clip_id = library.register_clip(fall_clip);
+    let mut animation = Animation::from_clip(fall_clip_id);
+    animation.set_repetitions(AnimationRepeat::Times(1));
+    let animation_id = library.register_animation(animation);
+    library
+        .name_animation(animation_id, Movement::Fall)
         .unwrap();
 
     // Run
-    let walk_clip = Clip::from_frames(spritesheet.horizontal_strip(24, 0, 16));
+    let walk_clip = Clip::from_frames(spritesheet.horizontal_strip(28, 0, 16));
     let walk_clip_id = library.register_clip(walk_clip);
     let animation = Animation::from_clip(walk_clip_id);
     let animation_id = library.register_animation(animation);
     library
-        .name_animation(animation_id, Movement::Walk.to_string())
+        .name_animation(animation_id, Movement::Walk)
         .unwrap();
 
     // Jab
-    let jab_clip = Clip::from_frames(spritesheet.horizontal_strip(40, 0, 3));
+    let jab_clip = Clip::from_frames(spritesheet.horizontal_strip(44, 0, 3));
     let jab_clip_id = library.register_clip(jab_clip);
-    let jab_animation = Animation::from_clip(jab_clip_id);
+    let mut jab_animation = Animation::from_clip(jab_clip_id);
+    jab_animation.set_repetitions(AnimationRepeat::Times(1));
     let jab_animation_id = library.register_animation(jab_animation);
     library
-        .name_animation(jab_animation_id, Movement::Jab.to_string())
+        .name_animation(jab_animation_id, Movement::Jab)
         .unwrap();
 
     // Hook
-    let hook_clip = Clip::from_frames(spritesheet.horizontal_strip(43, 0, 5));
+    let hook_clip = Clip::from_frames(spritesheet.horizontal_strip(47, 0, 5));
     let hook_clip_id = library.register_clip(hook_clip);
-    let hook_animation = Animation::from_clip(hook_clip_id);
+    let mut hook_animation = Animation::from_clip(hook_clip_id);
+    hook_animation.set_repetitions(AnimationRepeat::Times(1));
     let hook_animation_id = library.register_animation(hook_animation);
     library
-        .name_animation(hook_animation_id, Movement::Hook.to_string())
+        .name_animation(hook_animation_id, Movement::Hook)
+        .unwrap();
+
+    // Uppercut
+    let uppercut_clip = Clip::from_frames(spritesheet.horizontal_strip(55, 0, 6));
+    let uppercut_clip_id = library.register_clip(uppercut_clip);
+    let mut animation = Animation::from_clip(uppercut_clip_id);
+    animation.set_repetitions(AnimationRepeat::Times(1));
+    let animation_id = library.register_animation(animation);
+    library
+        .name_animation(animation_id, Movement::Uppercut)
         .unwrap();
 
     let layout = texture_atlas_layouts.add(spritesheet.atlas_layout(32, 32));
@@ -139,9 +171,7 @@ pub fn player_animation_event(
     for event in events.read() {
         match event {
             AnimationEvent::ClipEnd { animation_id, .. } => {
-                if let Some(jab_animation_id) =
-                    library.animation_with_name(Movement::Jab.to_string())
-                {
+                if let Some(jab_animation_id) = library.animation_with_name(Movement::Jab) {
                     if *animation_id == jab_animation_id {
                         if let Ok(mut movement) = player_query.get_single_mut() {
                             if *movement == Movement::Jab {
@@ -150,12 +180,20 @@ pub fn player_animation_event(
                         }
                     }
                 }
-                if let Some(hook_animation_id) =
-                    library.animation_with_name(Movement::Hook.to_string())
-                {
+                if let Some(hook_animation_id) = library.animation_with_name(Movement::Hook) {
                     if *animation_id == hook_animation_id {
                         if let Ok(mut movement) = player_query.get_single_mut() {
                             if *movement == Movement::Hook {
+                                *movement = Movement::Idle
+                            }
+                        }
+                    }
+                }
+                if let Some(uppercut_animation_id) = library.animation_with_name(Movement::Uppercut)
+                {
+                    if *animation_id == uppercut_animation_id {
+                        if let Ok(mut movement) = player_query.get_single_mut() {
+                            if *movement == Movement::Uppercut {
                                 *movement = Movement::Idle
                             }
                         }
@@ -195,7 +233,8 @@ pub fn move_player(
         let mut velocity = velocity.linvel;
 
         // if we are grounded
-        if output.map_or(false, |output| output.grounded) {
+        let is_grounded = output.map_or(false, |output| output.grounded);
+        if is_grounded {
             velocity.y = 0.;
             *grounded_timer = 0.8;
         } else {
@@ -244,11 +283,22 @@ pub fn move_player(
             && (-DELTA..=DELTA).contains(&velocity.z)
             && (-DELTA..=DELTA).contains(&velocity.y));
 
-        if *movement != Movement::Jab && *movement != Movement::Hook {
+        if *movement != Movement::Jab
+            && *movement != Movement::Hook
+            && *movement != Movement::Uppercut
+        {
             if action.just_pressed(&Input::LightPunch) {
                 *movement = Movement::Jab;
             } else if action.just_pressed(&Input::Hook) {
                 *movement = Movement::Hook;
+            } else if action.just_pressed(&Input::Uppercut) {
+                *movement = Movement::Uppercut;
+            } else if !is_grounded {
+                if velocity.y > DELTA {
+                    *movement = Movement::Jump;
+                } else if velocity.y < 1. {
+                    // *movement = Movement::Fall;
+                }
             } else if !is_moving {
                 *movement = Movement::Idle;
             } else {
@@ -257,8 +307,7 @@ pub fn move_player(
         }
 
         if is_moving {
-            let translation_change =
-                velocity * time.delta_seconds() + 0.5 * GRAVITY * time.delta_seconds().powi(2);
+            let translation_change = velocity * time.delta_seconds();
             controller.translation = match controller.translation {
                 Some(existing_translation) => Some(existing_translation + translation_change),
                 None => Some(translation_change),

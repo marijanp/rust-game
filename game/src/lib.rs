@@ -52,7 +52,6 @@ pub struct GamePlugin;
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.insert_state(GameState::Paused)
-            //.add_plugins(RapierPhysicsPlugin::<NoUserData>::with_length_unit(16.0))
             .add_systems(Startup, spawn_camera)
             .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
             .add_plugins(InputManagerPlugin::<Input>::default())
@@ -79,6 +78,7 @@ pub enum Input {
     Fall,
     LightPunch,
     Hook,
+    Uppercut,
 }
 
 impl Input {
@@ -95,6 +95,7 @@ impl Input {
             (Input::Jump, KeyCode::Space),
             (Input::LightPunch, KeyCode::KeyJ),
             (Input::Hook, KeyCode::KeyH),
+            (Input::Uppercut, KeyCode::KeyU),
         ])
     }
 }
