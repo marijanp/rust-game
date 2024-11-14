@@ -11,7 +11,7 @@ pub fn spawn(
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
     mut library: ResMut<AnimationLibrary>,
 ) {
-    let texture = asset_server.load("Items/Fruits/Apple.png");
+    let texture = asset_server.load("apple.png");
 
     let spritesheet = Spritesheet::new(17, 1);
     let clip = Clip::from_frames(spritesheet.row(0));
