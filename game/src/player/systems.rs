@@ -239,7 +239,6 @@ pub fn move_player(
     {
         let mut velocity = velocity.linvel;
 
-        // if we are grounded
         let is_grounded = output.map_or(false, |output| output.grounded);
         if is_grounded {
             velocity.y = 0.;
@@ -255,35 +254,26 @@ pub fn move_player(
             }
         }
 
+        // Horizontal movement
         if action.pressed(&Input::Left) {
             velocity.x = -V;
         } else if action.pressed(&Input::Right) {
             velocity.x = V;
         }
 
-        if action.just_released(&Input::Left) || action.just_released(&Input::Right) {
+        if !action.pressed(&Input::Left) && !action.pressed(&Input::Right) {
             velocity.x = 0.;
         }
 
+        // Vertical movement
         if action.pressed(&Input::Up) {
             velocity.z = -V;
         } else if action.pressed(&Input::Down) {
             velocity.z = V;
         }
 
-        if action.just_released(&Input::Up) || action.just_released(&Input::Down) {
+        if !action.pressed(&Input::Up) && !action.pressed(&Input::Down) {
             velocity.z = 0.;
-        }
-
-        // if the velocity in any direction is unsignificant, set it to zero
-        if (-DELTA..=DELTA).contains(&velocity.x) {
-            velocity.x = 0.;
-        }
-        if (-DELTA..=DELTA).contains(&velocity.z) {
-            velocity.z = 0.;
-        }
-        if (-DELTA..=DELTA).contains(&velocity.y) {
-            velocity.y = 0.;
         }
 
         let is_moving = !((-DELTA..=DELTA).contains(&velocity.x)
@@ -303,7 +293,7 @@ pub fn move_player(
             } else if !is_grounded {
                 if velocity.y > DELTA {
                     *movement = Movement::Jump;
-                } else if velocity.y < 1. {
+                } else if velocity.y < -DELTA {
                     // *movement = Movement::Fall;
                 }
             } else if !is_moving {
