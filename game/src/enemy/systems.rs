@@ -39,9 +39,11 @@ pub fn spawn(
             collider_bundle: ColliderBundle {
                 collider: Collider::round_cylinder(0.4, 0.1, 0.1),
                 rigid_body: RigidBody::Dynamic,
-                //active_events: ActiveEvents::COLLISION_EVENTS,
+                active_events: ActiveEvents::COLLISION_EVENTS,
+                rotation_constraints: LockedAxes::ROTATION_LOCKED,
                 ..default()
             },
+            external_impulse: ExternalImpulse::default(),
         });
     }
 }

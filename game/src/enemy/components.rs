@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy_rapier3d::prelude::*;
 use bevy_spritesheet_animation::prelude::*;
 
 use crate::ColliderBundle;
@@ -13,4 +14,5 @@ pub struct EnemyBundle {
     pub sprite_bundle: Sprite3dBundle,
     pub sprite_sheet_animation: SpritesheetAnimation,
     pub collider_bundle: ColliderBundle,
+    pub external_impulse: ExternalImpulse,
 }
