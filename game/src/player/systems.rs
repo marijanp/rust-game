@@ -60,7 +60,9 @@ pub fn spawn(
     let jab_clip = Clip::from_frames(spritesheet.horizontal_strip(44, 0, 3));
     let jab_clip_id = library.register_clip(jab_clip);
     let mut jab_animation = Animation::from_clip(jab_clip_id);
-    jab_animation.set_repetitions(AnimationRepeat::Times(1));
+    jab_animation
+        .set_repetitions(AnimationRepeat::Times(1))
+        .set_duration(AnimationDuration::PerRepetition(200));
     let jab_animation_id = library.register_animation(jab_animation);
     library
         .name_animation(jab_animation_id, Movement::Jab)
@@ -70,7 +72,9 @@ pub fn spawn(
     let hook_clip = Clip::from_frames(spritesheet.horizontal_strip(47, 0, 5));
     let hook_clip_id = library.register_clip(hook_clip);
     let mut hook_animation = Animation::from_clip(hook_clip_id);
-    hook_animation.set_repetitions(AnimationRepeat::Times(1));
+    hook_animation
+        .set_repetitions(AnimationRepeat::Times(1))
+        .set_duration(AnimationDuration::PerRepetition(200));
     let hook_animation_id = library.register_animation(hook_animation);
     library
         .name_animation(hook_animation_id, Movement::Hook)
@@ -80,7 +84,9 @@ pub fn spawn(
     let uppercut_clip = Clip::from_frames(spritesheet.horizontal_strip(55, 0, 6));
     let uppercut_clip_id = library.register_clip(uppercut_clip);
     let mut animation = Animation::from_clip(uppercut_clip_id);
-    animation.set_repetitions(AnimationRepeat::Times(1));
+    animation
+        .set_repetitions(AnimationRepeat::Times(1))
+        .set_duration(AnimationDuration::PerRepetition(200));
     let animation_id = library.register_animation(animation);
     library
         .name_animation(animation_id, Movement::Uppercut)
