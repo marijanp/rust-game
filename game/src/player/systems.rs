@@ -126,6 +126,7 @@ pub fn spawn(
             input_map: Input::player_one(),
             ..default()
         },
+        velocity: Velocity::default(),
     });
 }
 

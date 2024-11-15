@@ -6,6 +6,5 @@ pub struct ColliderBundle {
     pub collider: Collider,
     pub rigid_body: RigidBody,
     pub active_events: ActiveEvents,
-    pub velocity: Velocity,
     pub rotation_constraints: LockedAxes,
 }

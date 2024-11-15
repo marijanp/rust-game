@@ -43,6 +43,7 @@ pub struct PlayerBundle {
     pub sprite_bundle: Sprite3dBundle,
     pub sprite_sheet_animation: SpritesheetAnimation,
     pub collider_bundle: ColliderBundle,
+    pub velocity: Velocity,
     pub input_manager: InputManagerBundle<Input>,
     pub character_controller: KinematicCharacterController,
 }
