@@ -12,4 +12,5 @@ leafwing-input-manager = { git = "https://github.com/Leafwing-Studios/leafwing-i
 clap = { version = "4", features = ["derive"] }
 rand = "0.8"
 tracing = "0.1"
+blenvy = "0.1.0-alpha.1"
 

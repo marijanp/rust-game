@@ -19,6 +19,7 @@ use bevy::window::PrimaryWindow;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_rapier3d::prelude::*;
 use bevy_spritesheet_animation::prelude::SpritesheetAnimationPlugin;
+use blenvy::*;
 use leafwing_input_manager::prelude::*;
 
 #[derive(States, Clone, Debug, Copy, PartialEq, Eq, Hash, Default)]
@@ -53,6 +54,7 @@ impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.insert_state(GameState::Paused)
             .add_systems(Startup, spawn_camera)
+            .add_plugins(BlenvyPlugin::default())
             .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
             .add_plugins(InputManagerPlugin::<Input>::default())
             .add_plugins(SpritesheetAnimationPlugin)
