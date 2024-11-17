@@ -12,9 +12,9 @@ pub fn spawn(
     mut library: ResMut<AnimationLibrary>,
 ) {
     for (texture, transform, dim, columns, frames) in [
-        ("john.png", Transform::from_xyz(10., 0.1, 3.), 64, 3, 3),
-        ("kai.png", Transform::from_xyz(8., 0.1, 4.), 128, 4, 4),
-        ("brat.png", Transform::from_xyz(12., 0.1, 4.), 32, 7, 4),
+        ("john.png", Transform::from_xyz(10., 1., 3.), 64, 3, 3),
+        ("kai.png", Transform::from_xyz(8., 1., 4.), 128, 4, 4),
+        ("brat.png", Transform::from_xyz(12., 1., 4.), 32, 7, 4),
     ] {
         let texture = asset_server.load(texture);
 
@@ -32,12 +32,12 @@ pub fn spawn(
             sprite_bundle: Sprite3dBuilder::from_image(texture)
                 .with_atlas(layout)
                 .with_transform(transform)
-                .with_custom_size(Vec2::new(1., 1.))
+                .with_custom_size(Vec2::new(2., 2.))
                 .with_flip(true, false)
                 .build(),
             sprite_sheet_animation: SpritesheetAnimation::from_id(animation_id),
             collider_bundle: ColliderBundle {
-                collider: Collider::round_cylinder(0.4, 0.1, 0.1),
+                collider: Collider::round_cylinder(0.9, 0.05, 0.1),
                 rigid_body: RigidBody::Dynamic,
                 active_events: ActiveEvents::COLLISION_EVENTS,
                 rotation_constraints: LockedAxes::ROTATION_LOCKED,
@@ -49,7 +49,7 @@ pub fn spawn(
 }
 
 pub fn despawn(mut commands: Commands, enemy_query: Query<Entity, With<Enemy>>) {
-    if let Ok(enemy) = enemy_query.get_single() {
-        commands.entity(enemy).despawn();
+    for enemy in enemy_query.iter() {
+        commands.entity(enemy).despawn_recursive();
     }
 }
