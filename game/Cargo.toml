@@ -14,3 +14,6 @@ rand = "0.8"
 tracing = "0.1"
 blenvy = "0.1.0-alpha.1"
 
+[features]
+default = []
+dev = [ "bevy/file_watcher" ]
