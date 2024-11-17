@@ -4,9 +4,8 @@ use bevy_rapier3d::prelude::Collider as RapierCollider;
 use bevy_rapier3d::prelude::*;
 use blenvy::*;
 
-use crate::world::components::{Collider, Ground};
+use crate::world::components::Collider;
 
-// http://www.mathforgameprogrammers.com/gdc2016/GDC2016_Pittman_Kyle_BuildingABetterJump.pdf
 pub fn spawn(mut commands: Commands) {
     commands.spawn((
         BlueprintInfo::from_path("levels/World.glb"),
@@ -16,10 +15,7 @@ pub fn spawn(mut commands: Commands) {
     ));
 }
 
-pub fn despawn(
-    mut commands: Commands,
-    gameworlds: Query<Entity, With<GameWorldTag>>,
-) {
+pub fn despawn(mut commands: Commands, gameworlds: Query<Entity, With<GameWorldTag>>) {
     for gameworld in gameworlds.iter() {
         commands.entity(gameworld).despawn_recursive();
     }
@@ -69,9 +65,7 @@ pub fn physics_replace_proxies(
                         &ComputedColliderShape::TriMesh,
                     )
                     .unwrap();
-                    commands
-                        .entity(entity)
-                        .insert(rapier_collider);
+                    commands.entity(entity).insert(rapier_collider);
                 }
             }
         }
@@ -123,34 +117,4 @@ impl MeshExt for Mesh {
             Vec::new()
         }
     }
-}
-
-pub fn draw_cursor(
-    camera_query: Query<(&Camera, &GlobalTransform)>,
-    ground_query: Query<&GlobalTransform, With<Ground>>,
-    windows: Query<&Window>,
-    mut gizmos: Gizmos,
-) {
-    let (camera, camera_transform) = camera_query.single();
-    let ground = ground_query.single();
-
-    let Some(cursor_position) = windows.single().cursor_position() else {
-        return;
-    };
-
-    // Calculate a ray pointing from the camera into the world based on the cursor's position.
-    let Some(ray) = camera.viewport_to_world(camera_transform, cursor_position) else {
-        return;
-    };
-
-    // Calculate if and where the ray is hitting the ground plane.
-    let Some(distance) =
-        ray.intersect_plane(ground.translation(), InfinitePlane3d::new(ground.up()))
-    else {
-        return;
-    };
-    let point = ray.get_point(distance);
-
-    // Draw a circle just above the ground plane at that position.
-    gizmos.circle(point + ground.up() * 0.1, ground.up(), 0.2, Color::WHITE);
 }
