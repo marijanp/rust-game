@@ -107,6 +107,7 @@
             doCheck = false;
           };
           commonAttrsWasm = commonAttrs // {
+            RUSTFLAGS = "--cfg=web_sys_unstable_apis";
             cargoExtraArgs = "--target wasm32-unknown-unknown";
             nativeBuildInputs = commonAttrs.nativeBuildInputs ++ [ pkgs.lld ];
             CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_LINKER = "lld";
