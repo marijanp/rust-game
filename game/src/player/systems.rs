@@ -4,9 +4,11 @@ use bevy_spritesheet_animation::prelude::*;
 use leafwing_input_manager::prelude::*;
 
 use crate::collider::ColliderBundle;
-use crate::enemy::components::Enemy;
+use crate::enemy::components::{Enemy, EnemyMovement};
 use crate::fruit::components::Fruit;
-use crate::player::components::{Movement, Player, PlayerBundle};
+use crate::player::components::{
+    EnemiesInReach, FacingDirection, Movement, Player, PlayerBundle, PlayerReachSensor,
+};
 use crate::Input;
 
 pub fn spawn(
@@ -152,12 +154,16 @@ pub fn spawn(
                 ..default()
             },
             velocity: Velocity::default(),
+            enemies_in_reach: EnemiesInReach::default(),
+            facing_direction: FacingDirection::Right,
         })
         .with_children(|children| {
             children.spawn((
-                Collider::cuboid(0.2, 0.2, 0.2),
+                Collider::cuboid(0.5, 0.5, 0.5),
                 TransformBundle::from(Transform::from_xyz(0.2, 0., 0.)),
                 Sensor,
+                PlayerReachSensor,
+                ActiveEvents::COLLISION_EVENTS,
             ));
         });
 }
@@ -168,30 +174,53 @@ pub fn despawn(mut commands: Commands, player_query: Query<Entity, With<Player>>
     }
 }
 
+pub fn update_facing_direction(
+    mut player_query: Query<(&Velocity, &mut FacingDirection), With<Player>>,
+) {
+    for (velocity, mut facing_direction) in player_query.iter_mut() {
+        if velocity.linvel.x > DELTA {
+            facing_direction.set_if_neq(FacingDirection::Right);
+        } else if velocity.linvel.x < -DELTA {
+            facing_direction.set_if_neq(FacingDirection::Left);
+        }
+    }
+}
+
 const DELTA: f32 = 0.5;
 
-pub fn flip_player_sprite(
+pub fn update_player_animation(
     library: Res<AnimationLibrary>,
-    mut query: Query<
-        (
-            &Velocity,
-            &Movement,
-            &mut Sprite3d,
-            &mut SpritesheetAnimation,
-        ),
-        With<Player>,
-    >,
+    mut player_query: Query<(&Movement, &mut SpritesheetAnimation), With<Player>>,
 ) {
-    for (velocity, movement, mut sprite, mut animation) in query.iter_mut() {
-        if let Some(animation_id) = library.animation_with_name(movement.to_string()) {
+    for (movement, mut animation) in player_query.iter_mut() {
+        if let Some(animation_id) = library.animation_with_name(movement) {
             if animation.animation_id != animation_id {
                 animation.switch(animation_id);
             }
         }
-        if velocity.linvel.x > DELTA {
-            sprite.flip_x = false;
-        } else if velocity.linvel.x < -DELTA {
-            sprite.flip_x = true;
+    }
+}
+
+pub fn flip_player_sprite(
+    mut player_reach_sensor_query: Query<&mut Transform, With<PlayerReachSensor>>,
+    mut player_query: Query<(&FacingDirection, &mut Sprite3d), With<Player>>,
+) {
+    for (facing_direction, mut sprite) in player_query.iter_mut() {
+        match facing_direction {
+            FacingDirection::Left => sprite.flip_x = true,
+            FacingDirection::Right => sprite.flip_x = false,
+        }
+
+        if let Ok(mut reach_sensor_transform) = player_reach_sensor_query.get_single_mut() {
+            match facing_direction {
+                FacingDirection::Left => {
+                    reach_sensor_transform.translation =
+                        -1. * reach_sensor_transform.translation.abs()
+                }
+                FacingDirection::Right => {
+                    reach_sensor_transform.translation = reach_sensor_transform.translation.abs()
+                }
+            }
         }
     }
 }
@@ -200,25 +229,29 @@ pub fn player_animation_event(
     mut events: EventReader<AnimationEvent>,
     library: Res<AnimationLibrary>,
     mut player_query: Query<&mut Movement, With<Player>>,
+    mut enemy_query: Query<&mut EnemyMovement, With<Enemy>>,
 ) {
     for event in events.read() {
         match event {
             AnimationEvent::ClipEnd { animation_id, .. } => {
+                if let Some(hit_animation_id) = library.animation_with_name(EnemyMovement::Hit) {
+                    if *animation_id == hit_animation_id {
+                        for mut movement in enemy_query.iter_mut() {
+                            movement.set_if_neq(EnemyMovement::Idle);
+                        }
+                    }
+                }
                 if let Some(jab_animation_id) = library.animation_with_name(Movement::Jab) {
                     if *animation_id == jab_animation_id {
                         if let Ok(mut movement) = player_query.get_single_mut() {
-                            if *movement == Movement::Jab {
-                                *movement = Movement::Idle
-                            }
+                            movement.set_if_neq(Movement::Idle);
                         }
                     }
                 }
                 if let Some(hook_animation_id) = library.animation_with_name(Movement::Hook) {
                     if *animation_id == hook_animation_id {
                         if let Ok(mut movement) = player_query.get_single_mut() {
-                            if *movement == Movement::Hook {
-                                *movement = Movement::Idle
-                            }
+                            movement.set_if_neq(Movement::Idle);
                         }
                     }
                 }
@@ -226,9 +259,7 @@ pub fn player_animation_event(
                 {
                     if *animation_id == uppercut_animation_id {
                         if let Ok(mut movement) = player_query.get_single_mut() {
-                            if *movement == Movement::Uppercut {
-                                *movement = Movement::Idle
-                            }
+                            movement.set_if_neq(Movement::Idle);
                         }
                     }
                 }
@@ -346,42 +377,75 @@ pub fn move_player(
     }
 }
 
-pub fn punch(
-    character_controller_outputs: Query<
-        (
-            &ActionState<Input>,
-            &KinematicCharacterControllerOutput,
-            &Velocity,
-        ),
-        (With<Player>, Changed<KinematicCharacterControllerOutput>),
-    >,
-    mut enemy_impulses: Query<&mut ExternalImpulse, With<Enemy>>,
+pub fn update_enemies_in_reach(
+    mut collision_events: EventReader<CollisionEvent>,
+    player_reach_sensor_query: Query<&Parent, With<PlayerReachSensor>>,
+    mut player_query: Query<&mut EnemiesInReach, With<Player>>,
 ) {
-    if let Ok((input, output, player_velocity)) = character_controller_outputs.get_single() {
-        if input.just_pressed(&Input::Hook) {
-            for collision in &output.collisions {
-                if let Ok(mut ext_impulse) = enemy_impulses.get_mut(collision.entity) {
-                    if player_velocity.linvel.x > DELTA {
-                        ext_impulse.impulse = Vec3::new(0., 0., -0.2);
-                    } else if player_velocity.linvel.x < -DELTA {
-                        ext_impulse.impulse = Vec3::new(0., 0., 0.2);
+    for event in collision_events.read() {
+        match event {
+            CollisionEvent::Started(entity1, entity2, _) => {
+                if let Ok(player_entity) = player_reach_sensor_query
+                    .get(*entity1)
+                    .or_else(|_| player_reach_sensor_query.get(*entity2))
+                {
+                    if let Ok(mut enemies_in_reach) = player_query.get_mut(player_entity.get()) {
+                        // Identify the enemy entity (the other collider)
+                        let enemy = if player_reach_sensor_query.get(*entity1).is_ok() {
+                            *entity2
+                        } else {
+                            *entity1
+                        };
+                        enemies_in_reach.0.insert(enemy);
                     }
                 }
             }
-        } else if input.just_pressed(&Input::LightPunch) {
-            for collision in &output.collisions {
-                if let Ok(mut ext_impulse) = enemy_impulses.get_mut(collision.entity) {
-                    if player_velocity.linvel.x > DELTA {
-                        ext_impulse.impulse = Vec3::new(0.2, 0., 0.);
-                    } else if player_velocity.linvel.x < -DELTA {
-                        ext_impulse.impulse = Vec3::new(-0.2, 0., 0.);
+            CollisionEvent::Stopped(entity1, entity2, _) => {
+                if let Ok(player_entity) = player_reach_sensor_query
+                    .get(*entity1)
+                    .or_else(|_| player_reach_sensor_query.get(*entity2))
+                {
+                    if let Ok(mut enemies_in_reach) = player_query.get_mut(player_entity.get()) {
+                        // Identify the enemy entity (the other collider)
+                        let enemy = if player_reach_sensor_query.get(*entity1).is_ok() {
+                            *entity2
+                        } else {
+                            *entity1
+                        };
+                        enemies_in_reach.0.remove(&enemy);
                     }
                 }
             }
-        } else if input.just_pressed(&Input::Uppercut) {
-            for collision in &output.collisions {
-                if let Ok(mut ext_impulse) = enemy_impulses.get_mut(collision.entity) {
+        }
+    }
+}
+
+pub fn punch(
+    player_query: Query<(&ActionState<Input>, &FacingDirection, &EnemiesInReach), With<Player>>,
+    mut enemy_impulses: Query<(&mut ExternalImpulse, &mut EnemyMovement), With<Enemy>>,
+) {
+    if let Ok((input, facing_direction, enemies_in_reach)) = player_query.get_single() {
+        for enemy in &enemies_in_reach.0 {
+            if input.just_pressed(&Input::Hook) {
+                if let Ok((mut ext_impulse, mut movement)) = enemy_impulses.get_mut(*enemy) {
+                    match facing_direction {
+                        FacingDirection::Left => ext_impulse.impulse = Vec3::new(0., 0., 0.2),
+                        FacingDirection::Right => ext_impulse.impulse = Vec3::new(0., 0., -0.2),
+                    }
+                    movement.set_if_neq(EnemyMovement::Hit);
+                }
+            } else if input.just_pressed(&Input::LightPunch) {
+                if let Ok((mut ext_impulse, mut movement)) = enemy_impulses.get_mut(*enemy) {
+                    match facing_direction {
+                        FacingDirection::Left => ext_impulse.impulse = Vec3::new(-0.1, 0., 0.),
+                        FacingDirection::Right => ext_impulse.impulse = Vec3::new(0.1, 0., 0.),
+                    }
+                    movement.set_if_neq(EnemyMovement::Hit);
+                }
+            } else if input.just_pressed(&Input::Uppercut) {
+                if let Ok((mut ext_impulse, mut movement)) = enemy_impulses.get_mut(*enemy) {
                     ext_impulse.impulse = Vec3::new(0., 0.1, 0.);
+                    movement.set_if_neq(EnemyMovement::Hit);
                 }
             }
         }

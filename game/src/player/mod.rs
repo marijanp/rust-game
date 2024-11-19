@@ -20,8 +20,9 @@ impl Plugin for PlayerPlugin {
             Update,
             (
                 systems::move_player,
-                systems::punch,
                 systems::player_animation_event,
+                systems::update_player_animation,
+                systems::update_facing_direction,
                 systems::flip_player_sprite,
             )
                 .chain()
@@ -29,7 +30,12 @@ impl Plugin for PlayerPlugin {
         )
         .add_systems(
             Update,
-            systems::collect_fruits.run_if(in_state(GameState::Running)),
+            (
+                systems::collect_fruits.run_if(in_state(GameState::Running)),
+                (systems::update_enemies_in_reach, systems::punch)
+                    .chain()
+                    .run_if(in_state(GameState::Running)),
+            ),
         )
         .add_systems(OnExit(AppState::InGame), systems::despawn);
     }
