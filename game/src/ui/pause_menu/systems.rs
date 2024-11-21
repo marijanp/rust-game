@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use super::components::{MainMenuButton, PauseMenu, QuitButton, ResumeButton};
 use crate::{color, AppState, GameState};
 
-pub fn spawn(mut commands: Commands, assets_server: Res<AssetServer>) {
+pub fn spawn(mut commands: Commands) {
     commands
         .spawn((
             NodeBundle {
@@ -21,10 +21,6 @@ pub fn spawn(mut commands: Commands, assets_server: Res<AssetServer>) {
             PauseMenu {},
         ))
         .with_children(|parent| {
-            parent.spawn(AudioBundle {
-                source: assets_server.load("ambience.mp3"),
-                ..default()
-            });
             // Title
             parent
                 .spawn(NodeBundle {
