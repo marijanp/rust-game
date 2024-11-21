@@ -1,3 +1,4 @@
+use bevy::audio::PlaybackMode;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 use bevy_spritesheet_animation::prelude::*;
@@ -423,6 +424,8 @@ pub fn update_enemies_in_reach(
 pub fn punch(
     player_query: Query<(&ActionState<Input>, &FacingDirection, &EnemiesInReach), With<Player>>,
     mut enemy_impulses: Query<(&mut ExternalImpulse, &mut EnemyMovement), With<Enemy>>,
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
 ) {
     if let Ok((input, facing_direction, enemies_in_reach)) = player_query.get_single() {
         for enemy in &enemies_in_reach.0 {
@@ -433,6 +436,13 @@ pub fn punch(
                         FacingDirection::Right => ext_impulse.impulse = Vec3::new(0., 0., -0.2),
                     }
                     movement.set_if_neq(EnemyMovement::Hit);
+                    commands.spawn(AudioBundle {
+                        source: asset_server.load("punch.mp3"),
+                        settings: PlaybackSettings {
+                            mode: PlaybackMode::Despawn,
+                            ..default()
+                        },
+                    });
                 }
             } else if input.just_pressed(&Input::LightPunch) {
                 if let Ok((mut ext_impulse, mut movement)) = enemy_impulses.get_mut(*enemy) {
@@ -441,11 +451,25 @@ pub fn punch(
                         FacingDirection::Right => ext_impulse.impulse = Vec3::new(0.1, 0., 0.),
                     }
                     movement.set_if_neq(EnemyMovement::Hit);
+                    commands.spawn(AudioBundle {
+                        source: asset_server.load("punch.mp3"),
+                        settings: PlaybackSettings {
+                            mode: PlaybackMode::Despawn,
+                            ..default()
+                        },
+                    });
                 }
             } else if input.just_pressed(&Input::Uppercut) {
                 if let Ok((mut ext_impulse, mut movement)) = enemy_impulses.get_mut(*enemy) {
                     ext_impulse.impulse = Vec3::new(0., 0.1, 0.);
                     movement.set_if_neq(EnemyMovement::Hit);
+                    commands.spawn(AudioBundle {
+                        source: asset_server.load("punch.mp3"),
+                        settings: PlaybackSettings {
+                            mode: PlaybackMode::Despawn,
+                            ..default()
+                        },
+                    });
                 }
             }
         }
