@@ -241,6 +241,7 @@ pub fn toggle_pause_menu(
             GameState::Paused => {
                 next_state.set(GameState::Running);
             }
+            _ => (),
         }
     }
 }

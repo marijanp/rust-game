@@ -3,7 +3,6 @@ pub mod systems;
 
 use crate::{AppState, GameState};
 use bevy::prelude::*;
-use blenvy::GltfBlueprintsSet;
 
 pub const PLAYER_WIDTH: f32 = 32.0;
 pub const PLAYER_HEIGHT: f32 = 32.0;
@@ -13,8 +12,11 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(
-            OnEnter(AppState::InGame),
-            systems::spawn.after(GltfBlueprintsSet::AfterSpawn),
+            OnTransition {
+                exited: GameState::SpawningLevelColliders,
+                entered: GameState::Running,
+            },
+            systems::spawn.run_if(in_state(AppState::InGame)),
         )
         .add_systems(
             Update,
@@ -26,7 +28,8 @@ impl Plugin for PlayerPlugin {
                 systems::flip_player_sprite,
             )
                 .chain()
-                .run_if(in_state(GameState::Running)),
+                .run_if(in_state(GameState::Running))
+                .run_if(in_state(AppState::InGame)),
         )
         .add_systems(
             Update,

@@ -51,6 +51,7 @@ pub enum GameState {
     #[default]
     Running,
     Paused,
+    SpawningLevelColliders,
 }
 
 pub struct GamePlugin;

@@ -5,6 +5,7 @@ use bevy_rapier3d::prelude::*;
 use blenvy::*;
 
 use crate::world::components::Collider;
+use crate::GameState;
 
 pub fn spawn(mut commands: Commands) {
     commands.spawn((
@@ -32,8 +33,8 @@ pub fn physics_replace_proxies(
     >,
     // needed for tri meshes
     children: Query<&Children>,
-
     mut commands: Commands,
+    mut next_game_state: ResMut<NextState<GameState>>,
 ) {
     for proxy_colider in proxy_colliders.iter_mut() {
         let (entity, collider_proxy, name, mut visibility) = proxy_colider;
@@ -69,6 +70,9 @@ pub fn physics_replace_proxies(
                 }
             }
         }
+    }
+    if !proxy_colliders.is_empty() {
+        next_game_state.set(GameState::Running);
     }
 }
 

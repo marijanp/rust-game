@@ -141,7 +141,7 @@ pub fn interact_with_play_button(
             Interaction::Pressed => {
                 *background_color = color::PRIMARY.into();
                 app_state_next.set(AppState::InGame);
-                game_state_next.set(GameState::Running);
+                game_state_next.set(GameState::SpawningLevelColliders);
             }
             Interaction::Hovered => {
                 *background_color = color::PRIMARY_HOVER.into();
