@@ -4,10 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-bevy = { version = "0.14", features = ["mp3"] }
-bevy_rapier2d = "0.27"
-bevy_ecs_ldtk = "0.10"
-leafwing-input-manager = { git = "https://github.com/Leafwing-Studios/leafwing-input-manager.git" }
+bevy = { version = "0.15", features = ["mp3"] }
+bevy_rapier2d = "0.28"
+bevy_ecs_ldtk = "0.11"
+leafwing-input-manager = "0.16"
 clap = { version = "4", features = ["derive"] }
 rand = "0.8"
 tracing = "0.1"

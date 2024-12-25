@@ -22,8 +22,8 @@ pub struct Player;
 #[derive(Default, LdtkEntity, Bundle)]
 pub struct PlayerBundle {
     fruit: Player,
-    #[sprite_sheet_bundle]
-    sprite_sheet_bundle: LdtkSpriteSheetBundle,
+    #[sprite_sheet]
+    sprite_sheet_bundle: Sprite,
     #[from_entity_instance]
     collider: ColliderBundle,
     #[with(animation_indices)]

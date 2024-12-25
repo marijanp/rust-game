@@ -14,7 +14,7 @@ use crate::fruit::components::FruitBundle;
 use crate::player::components::{Player, PlayerBundle};
 use crate::world::components::GroundBundle;
 
-use bevy::core_pipeline::bloom::BloomSettings;
+use bevy::core_pipeline::bloom::Bloom;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use bevy_ecs_ldtk::prelude::*;
@@ -105,15 +105,13 @@ pub fn spawn_camera(mut commands: Commands, window_query: Query<&Window, With<Pr
     info!("logical: {width}x{height}");
     info!("physical: {physical_width}x{physical_height}");
     commands.spawn((
-        Camera2dBundle {
-            camera: Camera {
-                hdr: true, // HDR is required for the bloom effect
-                ..default()
-            },
-            transform: Transform::from_xyz(window.width() / 2.0, window.height() / 2.0, 0.0),
+        Camera2d,
+        Camera {
+            hdr: true, // HDR is required for the bloom effect
             ..default()
         },
-        BloomSettings::NATURAL,
+        Transform::from_xyz(window.width() / 2.0, window.height() / 2.0, 0.0),
+        Bloom::NATURAL,
     ));
 }
 
@@ -130,9 +128,7 @@ fn update_camera(
         // Here we use the in-game time, to get the elapsed time (in seconds)
         // since the previous update. This avoids jittery movement when tracking
         // the player.
-        camera.translation = camera
-            .translation
-            .lerp(direction, time.delta_seconds() * 2.);
+        camera.translation = camera.translation.lerp(direction, time.delta_secs() * 2.);
     }
 }
 

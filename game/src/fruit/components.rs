@@ -10,8 +10,8 @@ pub struct Fruit;
 #[derive(Default, LdtkEntity, Bundle)]
 pub struct FruitBundle {
     fruit: Fruit,
-    #[sprite_sheet_bundle]
-    sprite_sheet_bundle: LdtkSpriteSheetBundle,
+    #[sprite_sheet]
+    sprite_sheet_bundle: Sprite,
     #[from_entity_instance]
     collider: ColliderBundle,
     #[with(animation_indices)]

@@ -6,155 +6,103 @@ use crate::{color, AppState, GameState};
 pub fn spawn(mut commands: Commands, assets_server: Res<AssetServer>) {
     commands
         .spawn((
-            NodeBundle {
-                style: Style {
-                    flex_direction: FlexDirection::Column,
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    row_gap: Val::Px(10.0),
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
-                    ..default()
-                },
+            Node {
+                flex_direction: FlexDirection::Column,
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                row_gap: Val::Px(10.0),
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
                 ..default()
             },
             PauseMenu {},
         ))
         .with_children(|parent| {
-            parent.spawn(AudioBundle {
-                source: assets_server.load("ambience.mp3"),
-                ..default()
-            });
+            parent.spawn(AudioPlayer::new(assets_server.load("ambience.mp3")));
             // Title
             parent
-                .spawn(NodeBundle {
-                    style: Style {
-                        flex_direction: FlexDirection::Row,
-                        justify_content: JustifyContent::Center,
-                        align_items: AlignItems::Center,
-                        ..default()
-                    },
+                .spawn(Node {
+                    flex_direction: FlexDirection::Row,
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
                     ..default()
                 })
                 .with_children(|parent| {
-                    parent.spawn(TextBundle {
-                        text: Text {
-                            justify: JustifyText::Center,
-                            sections: vec![TextSection {
-                                value: "Pause".to_string(),
-                                style: TextStyle {
-                                    font_size: 64.0,
-                                    color: color::PRIMARY_CONTENT,
-                                    ..default()
-                                },
-                            }],
-                            ..default()
-                        },
-                        ..default()
-                    });
+                    parent.spawn((
+                        Text::new("Pause"),
+                        TextLayout::default().with_justify(JustifyText::Center),
+                        TextFont::default().with_font_size(64.),
+                        TextColor::from(color::PRIMARY_CONTENT),
+                    ));
                 });
 
             // Resume Button
             parent
                 .spawn((
-                    ButtonBundle {
-                        background_color: color::PRIMARY.into(),
-                        style: Style {
-                            justify_content: JustifyContent::Center,
-                            align_items: AlignItems::Center,
-                            width: Val::Px(200.0),
-                            height: Val::Px(80.0),
-                            ..default()
-                        },
+                    Button,
+                    BackgroundColor::from(color::PRIMARY),
+                    Node {
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        width: Val::Px(200.0),
+                        height: Val::Px(80.0),
                         ..default()
                     },
                     ResumeButton,
                 ))
                 .with_children(|parent| {
-                    parent.spawn(TextBundle {
-                        text: Text {
-                            justify: JustifyText::Center,
-                            sections: vec![TextSection {
-                                value: "Resume".to_string(),
-                                style: TextStyle {
-                                    font_size: 32.0,
-                                    color: color::PRIMARY_CONTENT,
-                                    ..default()
-                                },
-                            }],
-                            ..default()
-                        },
-                        ..default()
-                    });
+                    parent.spawn((
+                        Text::new("Resume"),
+                        TextLayout::default().with_justify(JustifyText::Center),
+                        TextFont::default().with_font_size(32.),
+                        TextColor::from(color::PRIMARY_CONTENT),
+                    ));
                 });
 
             // MainMenu Button
             parent
                 .spawn((
-                    ButtonBundle {
-                        background_color: color::PRIMARY.into(),
-                        style: Style {
-                            justify_content: JustifyContent::Center,
-                            align_items: AlignItems::Center,
-                            width: Val::Px(200.0),
-                            height: Val::Px(80.0),
-                            ..default()
-                        },
+                    Button,
+                    BackgroundColor::from(color::PRIMARY),
+                    Node {
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        width: Val::Px(200.0),
+                        height: Val::Px(80.0),
                         ..default()
                     },
                     MainMenuButton,
                 ))
                 .with_children(|parent| {
-                    parent.spawn(TextBundle {
-                        text: Text {
-                            justify: JustifyText::Center,
-                            sections: vec![TextSection {
-                                value: "Main Menu".to_string(),
-                                style: TextStyle {
-                                    font_size: 32.0,
-                                    color: color::PRIMARY_CONTENT,
-                                    ..default()
-                                },
-                            }],
-                            ..default()
-                        },
-                        ..default()
-                    });
+                    parent.spawn((
+                        Text::new("Main Menu"),
+                        TextLayout::default().with_justify(JustifyText::Center),
+                        TextFont::default().with_font_size(32.),
+                        TextColor::from(color::PRIMARY_CONTENT),
+                    ));
                 });
 
             // Quit Button
             parent
                 .spawn((
-                    ButtonBundle {
-                        background_color: color::PRIMARY.into(),
-                        style: Style {
-                            justify_content: JustifyContent::Center,
-                            align_items: AlignItems::Center,
-                            width: Val::Px(200.0),
-                            height: Val::Px(80.0),
-                            ..default()
-                        },
+                    Button,
+                    BackgroundColor::from(color::PRIMARY),
+                    Node {
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        width: Val::Px(200.0),
+                        height: Val::Px(80.0),
                         ..default()
                     },
                     QuitButton,
                 ))
                 .with_children(|parent| {
-                    parent.spawn(TextBundle {
-                        text: Text {
-                            justify: JustifyText::Center,
-                            sections: vec![TextSection {
-                                value: "Quit".to_string(),
-                                style: TextStyle {
-                                    font_size: 32.0,
-                                    color: color::PRIMARY_CONTENT,
-                                    ..default()
-                                },
-                            }],
-
-                            ..default()
-                        },
-                        ..default()
-                    });
+                    parent.spawn((
+                        Text::new("Quit"),
+                        TextLayout::default().with_justify(JustifyText::Center),
+                        TextFont::default().with_font_size(32.),
+                        TextColor::from(color::PRIMARY_CONTENT),
+                    ));
                 });
         });
 }

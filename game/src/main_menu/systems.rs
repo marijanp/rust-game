@@ -6,16 +6,13 @@ use crate::{color, AppState, GameState};
 pub fn spawn(mut commands: Commands) {
     commands
         .spawn((
-            NodeBundle {
-                style: Style {
-                    flex_direction: FlexDirection::Column,
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    row_gap: Val::Px(10.0),
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
-                    ..default()
-                },
+            Node {
+                flex_direction: FlexDirection::Column,
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                row_gap: Val::Px(10.0),
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
                 ..default()
             },
             MainMenu {},
@@ -23,100 +20,65 @@ pub fn spawn(mut commands: Commands) {
         .with_children(|parent| {
             // Title
             parent
-                .spawn(NodeBundle {
-                    style: Style {
-                        flex_direction: FlexDirection::Row,
-                        justify_content: JustifyContent::Center,
-                        align_items: AlignItems::Center,
-                        ..default()
-                    },
+                .spawn(Node {
+                    flex_direction: FlexDirection::Row,
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
                     ..default()
                 })
                 .with_children(|parent| {
-                    parent.spawn(TextBundle {
-                        text: Text {
-                            justify: JustifyText::Center,
-                            sections: vec![TextSection {
-                                value: "Awesome Game".to_string(),
-                                style: TextStyle {
-                                    font_size: 64.0,
-                                    color: color::PRIMARY_CONTENT,
-                                    ..default()
-                                },
-                            }],
-                            ..default()
-                        },
-                        ..default()
-                    });
+                    parent.spawn((
+                        Text::new("Awesome Game"),
+                        TextLayout::default().with_justify(JustifyText::Center),
+                        TextFont::from_font_size(64.),
+                        TextColor::from(color::PRIMARY_CONTENT),
+                    ));
                 });
 
             // Play Button
             parent
                 .spawn((
-                    ButtonBundle {
-                        background_color: color::PRIMARY.into(),
-                        style: Style {
-                            justify_content: JustifyContent::Center,
-                            align_items: AlignItems::Center,
-                            width: Val::Px(200.0),
-                            height: Val::Px(80.0),
-                            ..default()
-                        },
+                    Button,
+                    BackgroundColor::from(color::PRIMARY),
+                    Node {
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        width: Val::Px(200.0),
+                        height: Val::Px(80.0),
                         ..default()
                     },
                     PlayButton,
                 ))
                 .with_children(|parent| {
-                    parent.spawn(TextBundle {
-                        text: Text {
-                            justify: JustifyText::Center,
-                            sections: vec![TextSection {
-                                value: "Play".to_string(),
-                                style: TextStyle {
-                                    font_size: 32.0,
-                                    color: color::PRIMARY_CONTENT,
-                                    ..default()
-                                },
-                            }],
-                            ..default()
-                        },
-                        ..default()
-                    });
+                    parent.spawn((
+                        Text::new("Play"),
+                        TextLayout::default().with_justify(JustifyText::Center),
+                        TextFont::default().with_font_size(32.),
+                        TextColor::from(color::PRIMARY_CONTENT),
+                    ));
                 });
 
             // Quit Button
             parent
                 .spawn((
-                    ButtonBundle {
-                        background_color: color::PRIMARY.into(),
-                        style: Style {
-                            justify_content: JustifyContent::Center,
-                            align_items: AlignItems::Center,
-                            width: Val::Px(200.0),
-                            height: Val::Px(80.0),
-                            ..default()
-                        },
+                    Button,
+                    BackgroundColor::from(color::PRIMARY),
+                    Node {
+                        justify_content: JustifyContent::Center,
+                        align_items: AlignItems::Center,
+                        width: Val::Px(200.0),
+                        height: Val::Px(80.0),
                         ..default()
                     },
                     QuitButton,
                 ))
                 .with_children(|parent| {
-                    parent.spawn(TextBundle {
-                        text: Text {
-                            justify: JustifyText::Center,
-                            sections: vec![TextSection {
-                                value: "Quit".to_string(),
-                                style: TextStyle {
-                                    font_size: 32.0,
-                                    color: color::PRIMARY_CONTENT,
-                                    ..default()
-                                },
-                            }],
-
-                            ..default()
-                        },
-                        ..default()
-                    });
+                    parent.spawn((
+                        Text::new("Quit"),
+                        TextLayout::default().with_justify(JustifyText::Center),
+                        TextFont::default().with_font_size(32.),
+                        TextColor::from(color::PRIMARY_CONTENT),
+                    ));
                 });
         });
 }

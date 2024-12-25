@@ -56,7 +56,7 @@ pub fn move_player(
         if action.just_pressed(&Action::Jump) {
             velocity.y = V_0;
         } else {
-            velocity.y += GRAVITY * time.delta_seconds();
+            velocity.y += GRAVITY * time.delta_secs();
         }
 
         if action.pressed(&Action::Left) {
@@ -69,7 +69,7 @@ pub fn move_player(
             velocity.x = 0.;
         }
 
-        let translation_change = velocity * time.delta_seconds();
+        let translation_change = velocity * time.delta_secs();
         controller.translation = match controller.translation {
             Some(existing_translation) => Some(existing_translation + translation_change),
             None => Some(translation_change),

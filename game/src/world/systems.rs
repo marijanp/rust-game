@@ -8,15 +8,12 @@ use crate::world::components::Ground;
 // http://www.mathforgameprogrammers.com/gdc2016/GDC2016_Pittman_Kyle_BuildingABetterJump.pdf
 pub fn spawn(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn(LdtkWorldBundle {
-        ldtk_handle: asset_server.load("tile-based-game.ldtk"),
+        ldtk_handle: asset_server.load("tile-based-game.ldtk").into(),
         ..Default::default()
     });
 }
 
-pub fn despawn(
-    mut commands: Commands,
-    enemy_entity_query: Query<Entity, With<Handle<LdtkProject>>>,
-) {
+pub fn despawn(mut commands: Commands, enemy_entity_query: Query<Entity, With<LdtkProjectHandle>>) {
     if let Ok(world_entity) = enemy_entity_query.get_single() {
         commands.entity(world_entity).despawn_recursive();
     }
@@ -44,7 +41,7 @@ pub fn add_ground_collider(
     ground_query: Query<(&GridCoords, &Parent), Added<Ground>>,
     parent_query: Query<&Parent, Without<Ground>>,
     level_query: Query<(Entity, &LevelIid)>,
-    ldtk_projects: Query<&Handle<LdtkProject>>,
+    ldtk_projects: Query<&LdtkProjectHandle>,
     ldtk_project_assets: Res<Assets<LdtkProject>>,
 ) {
     /// Represents a (potentially wide) ground that is 1 cell tall
