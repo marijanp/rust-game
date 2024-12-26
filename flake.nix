@@ -147,6 +147,7 @@
               pkgs.runCommand "game-wasm-bindgen"
                 {
                   nativeBuildInputs = [
+                    pkgs.removeReferencesTo
                     (pkgs.wasm-bindgen-cli.override {
                       version = "0.2.99";
                       hash = "sha256-1AN2E9t/lZhbXdVznhTcniy+7ZzlaEp/gwLEAucs6EA=";
@@ -162,6 +163,8 @@
                   ln -s ${./game/assets}/ $out/assets
                   ln -s ${./dist}/index.html $out/index.html
                   ln -s ${./dist}/js $out/js
+
+                  find "$out" -type f -exec remove-references-to -t ${rustToolchain} '{}' +
                 '';
 
             game = craneLib.buildPackage (
