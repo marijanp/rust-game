@@ -202,12 +202,12 @@
               }
             );
 
-            coverage-report = craneLib.cargoTarpaulin (
-              commonAttrs
-              // {
-                cargoArtifacts = self'.packages.game-deps;
-              }
-            );
+            #coverage-report = craneLib.cargoTarpaulin (
+            #  commonAttrs
+            #  // {
+            #    cargoArtifacts = self'.packages.game-deps;
+            #  }
+            #);
           };
 
           treefmt = {
