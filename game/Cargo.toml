@@ -5,10 +5,10 @@ edition = "2021"
 
 [dependencies]
 bevy = { version = "0.15", features = ["mp3"] }
-bevy_rapier2d = "0.28"
+bevy_rapier2d = "0.29"
 bevy_ecs_ldtk = "0.11"
 leafwing-input-manager = "0.16"
 clap = { version = "4", features = ["derive"] }
-rand = "0.8"
+rand = "0.9"
 tracing = "0.1"
 
