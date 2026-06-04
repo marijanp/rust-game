@@ -10,7 +10,8 @@ pub struct Fruit;
 pub struct FruitBundle {
     pub fruit: Fruit,
     pub name: Name,
-    pub sprite_bundle: Sprite3dBundle,
+    pub sprite: Sprite3d,
+    pub transform: Transform,
     pub sprite_sheet_animation: SpritesheetAnimation,
     pub collider_bundle: ColliderBundle,
 }

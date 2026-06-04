@@ -1,18 +1,20 @@
 [package]
 name = "game"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
+rust-version = "1.95.0"
 
 [dependencies]
-bevy = { version = "0.14", features = ["mp3"] }
-bevy_rapier3d = { version = "0.27"}
-bevy-inspector-egui = "0.27"
-bevy_spritesheet_animation = "0.4"
-leafwing-input-manager = { git = "https://github.com/Leafwing-Studios/leafwing-input-manager.git" }
+bevy = { version = "0.18.1", features = ["mp3"] }
+bevy_rapier3d = { version = "0.33" }
+bevy_egui = "0.39"
+bevy-inspector-egui = "0.36"
+bevy_spritesheet_animation = "6.1"
+leafwing-input-manager = "0.20"
 clap = { version = "4", features = ["derive"] }
 rand = "0.8"
 tracing = "0.1"
-blenvy = "0.1.0-alpha.1"
+bevy_skein = "0.5"
 
 [features]
 default = []

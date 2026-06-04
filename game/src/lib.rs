@@ -12,14 +12,16 @@ use crate::cli::CliArgs;
 use crate::collider::ColliderBundle;
 use crate::player::components::Player;
 
+use bevy::camera::ScalingMode;
 use bevy::prelude::*;
-use bevy::render::camera::ScalingMode;
 use bevy::window::PrimaryWindow;
+#[cfg(feature = "dev")]
+use bevy_egui::EguiPlugin;
 #[cfg(feature = "dev")]
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_rapier3d::prelude::*;
+use bevy_skein::SkeinPlugin;
 use bevy_spritesheet_animation::prelude::SpritesheetAnimationPlugin;
-use blenvy::*;
 use leafwing_input_manager::prelude::*;
 
 // App
@@ -60,7 +62,7 @@ impl Plugin for GamePlugin {
         app.insert_state(GameState::Paused)
             .add_systems(Startup, spawn_camera)
             .add_plugins(RapierPhysicsPlugin::<NoUserData>::default())
-            .add_plugins(BlenvyPlugin::default())
+            .add_plugins(SkeinPlugin::default())
             .add_plugins(InputManagerPlugin::<Input>::default())
             .add_plugins(SpritesheetAnimationPlugin)
             .add_plugins(ui::UiPlugin)
@@ -71,6 +73,7 @@ impl Plugin for GamePlugin {
             .add_systems(Update, (touch_system, move_camera));
         #[cfg(feature = "dev")]
         app.add_plugins(RapierDebugRenderPlugin::default())
+            .add_plugins(EguiPlugin::default())
             .add_plugins(WorldInspectorPlugin::new());
     }
 }
@@ -112,7 +115,7 @@ impl Input {
 // Camera
 
 pub fn spawn_camera(mut commands: Commands, window_query: Query<&Window, With<PrimaryWindow>>) {
-    let window = window_query.get_single().unwrap();
+    let window = window_query.single().unwrap();
     let width = window.width();
     let height = window.height();
     let physical_width = window.physical_width();
@@ -122,20 +125,17 @@ pub fn spawn_camera(mut commands: Commands, window_query: Query<&Window, With<Pr
     let common_transform =
         Transform::from_xyz(0., 8., 10.).looking_at(Vec3::new(0.0, 4., 0.0), Vec3::Y);
     // light
-    commands.spawn(DirectionalLightBundle {
-        transform: common_transform,
-        ..default()
-    });
+    commands.spawn((DirectionalLight::default(), common_transform));
     // camera
-    commands.spawn(Camera3dBundle {
-        projection: OrthographicProjection {
-            scaling_mode: ScalingMode::WindowSize(32.),
-            ..default()
-        }
-        .into(),
-        transform: common_transform,
-        ..default()
-    });
+    commands.spawn((
+        Camera3d::default(),
+        Projection::from(OrthographicProjection {
+            scaling_mode: ScalingMode::WindowSize,
+            scale: 1. / 32.,
+            ..OrthographicProjection::default_3d()
+        }),
+        common_transform,
+    ));
 }
 
 fn move_camera(
@@ -143,7 +143,7 @@ fn move_camera(
     player: Query<&Transform, (With<Player>, Without<Camera3d>)>,
     time: Res<Time>,
 ) {
-    if let (Ok(mut camera), Ok(player)) = (camera.get_single_mut(), player.get_single()) {
+    if let (Ok(mut camera), Ok(player)) = (camera.single_mut(), player.single()) {
         let direction = Vec3::new(
             player.translation.x,
             camera.translation.y,
@@ -154,9 +154,7 @@ fn move_camera(
         // Here we use the in-game time, to get the elapsed time (in seconds)
         // since the previous update. This avoids jittery movement when tracking
         // the player.
-        camera.translation = camera
-            .translation
-            .lerp(direction, time.delta_seconds() * 2.);
+        camera.translation = camera.translation.lerp(direction, time.delta_secs() * 2.);
     }
 }
 
@@ -165,8 +163,8 @@ fn touch_system(
     window_query: Query<&Window, With<PrimaryWindow>>,
     mut action_state_query: Query<&mut ActionState<Input>>,
 ) {
-    let window = window_query.get_single().unwrap();
-    if let Ok(mut action_state) = action_state_query.get_single_mut() {
+    let window = window_query.single().unwrap();
+    if let Ok(mut action_state) = action_state_query.single_mut() {
         if touches
             .iter()
             .any(|touch| touch.position().x < window.width() / 2.)

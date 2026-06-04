@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 use bevy_spritesheet_animation::prelude::*;
-use leafwing_input_manager::InputManagerBundle;
+use leafwing_input_manager::prelude::InputMap;
 
 use std::collections::HashSet;
 use std::fmt;
@@ -60,11 +60,12 @@ pub struct PlayerBundle {
     pub player: Player,
     pub name: Name,
     pub movement: Movement,
-    pub sprite_bundle: Sprite3dBundle,
+    pub sprite: Sprite3d,
+    pub transform: Transform,
     pub sprite_sheet_animation: SpritesheetAnimation,
     pub collider_bundle: ColliderBundle,
     pub velocity: Velocity,
-    pub input_manager: InputManagerBundle<Input>,
+    pub input_map: InputMap<Input>,
     pub character_controller: KinematicCharacterController,
     pub enemies_in_reach: EnemiesInReach,
     pub facing_direction: FacingDirection,

@@ -1,4 +1,3 @@
-use bevy::audio::PlaybackMode;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 use bevy_spritesheet_animation::prelude::*;
@@ -12,120 +11,93 @@ use crate::player::components::{
 };
 use crate::Input;
 
+#[derive(Resource)]
+pub struct PlayerAnimations {
+    idle: Handle<Animation>,
+    jump: Handle<Animation>,
+    fall: Handle<Animation>,
+    walk: Handle<Animation>,
+    jab: Handle<Animation>,
+    hook: Handle<Animation>,
+    uppercut: Handle<Animation>,
+}
+
 pub fn spawn(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
-    mut library: ResMut<AnimationLibrary>,
+    mut animations: ResMut<Assets<Animation>>,
 ) {
     let texture = asset_server.load("bouncer.png");
 
-    let spritesheet = Spritesheet::new(61, 1);
+    let spritesheet = Spritesheet::new(&texture, 61, 1);
+    let player_animations = PlayerAnimations {
+        idle: animations.add(
+            spritesheet
+                .create_animation()
+                .add_horizontal_strip(0, 0, 12)
+                .build(),
+        ),
+        jump: animations.add(
+            spritesheet
+                .create_animation()
+                .add_horizontal_strip(24, 0, 2)
+                .set_repetitions(AnimationRepeat::Times(1))
+                .build(),
+        ),
+        fall: animations.add(
+            spritesheet
+                .create_animation()
+                .add_horizontal_strip(26, 0, 2)
+                .set_repetitions(AnimationRepeat::Times(1))
+                .build(),
+        ),
+        walk: animations.add(
+            spritesheet
+                .create_animation()
+                .add_horizontal_strip(28, 0, 16)
+                .build(),
+        ),
+        jab: animations.add(
+            spritesheet
+                .create_animation()
+                .add_horizontal_strip(44, 0, 3)
+                .set_repetitions(AnimationRepeat::Times(1))
+                .set_duration(AnimationDuration::PerRepetition(200))
+                .build(),
+        ),
+        hook: animations.add(
+            spritesheet
+                .create_animation()
+                .add_horizontal_strip(47, 0, 5)
+                .set_repetitions(AnimationRepeat::Times(1))
+                .set_duration(AnimationDuration::PerRepetition(200))
+                .build(),
+        ),
+        uppercut: animations.add(
+            spritesheet
+                .create_animation()
+                .add_horizontal_strip(55, 0, 6)
+                .set_repetitions(AnimationRepeat::Times(1))
+                .set_duration(AnimationDuration::PerRepetition(200))
+                .build(),
+        ),
+    };
 
-    // Idle
-    let idle_animation_id = library
-        .animation_with_name(Movement::Idle)
-        .unwrap_or_else(|| {
-            let clip = Clip::from_frames(spritesheet.horizontal_strip(0, 0, 12));
-            let clip_id = library.register_clip(clip);
-            let animation = Animation::from_clip(clip_id);
-            let animation_id = library.register_animation(animation);
-            library
-                .name_animation(animation_id, Movement::Idle)
-                .unwrap();
-            animation_id
-        });
-
-    // Jump
-    if library.animation_with_name(Movement::Jump).is_none() {
-        let jump_clip = Clip::from_frames(spritesheet.horizontal_strip(24, 0, 2));
-        let jump_clip_id = library.register_clip(jump_clip);
-        let mut animation = Animation::from_clip(jump_clip_id);
-        animation.set_repetitions(AnimationRepeat::Times(1));
-        let animation_id = library.register_animation(animation);
-        library
-            .name_animation(animation_id, Movement::Jump)
-            .unwrap();
-    }
-
-    // Fall
-    if library.animation_with_name(Movement::Fall).is_none() {
-        let fall_clip = Clip::from_frames(spritesheet.horizontal_strip(26, 0, 2));
-        let fall_clip_id = library.register_clip(fall_clip);
-        let mut animation = Animation::from_clip(fall_clip_id);
-        animation.set_repetitions(AnimationRepeat::Times(1));
-        let animation_id = library.register_animation(animation);
-        library
-            .name_animation(animation_id, Movement::Fall)
-            .unwrap();
-    }
-
-    // Run
-    if library.animation_with_name(Movement::Walk).is_none() {
-        let walk_clip = Clip::from_frames(spritesheet.horizontal_strip(28, 0, 16));
-        let walk_clip_id = library.register_clip(walk_clip);
-        let animation = Animation::from_clip(walk_clip_id);
-        let animation_id = library.register_animation(animation);
-        library
-            .name_animation(animation_id, Movement::Walk)
-            .unwrap();
-    }
-
-    // Jab
-    if library.animation_with_name(Movement::Jab).is_none() {
-        let jab_clip = Clip::from_frames(spritesheet.horizontal_strip(44, 0, 3));
-        let jab_clip_id = library.register_clip(jab_clip);
-        let mut jab_animation = Animation::from_clip(jab_clip_id);
-        jab_animation
-            .set_repetitions(AnimationRepeat::Times(1))
-            .set_duration(AnimationDuration::PerRepetition(200));
-        let jab_animation_id = library.register_animation(jab_animation);
-        library
-            .name_animation(jab_animation_id, Movement::Jab)
-            .unwrap();
-    }
-
-    // Hook
-    if library.animation_with_name(Movement::Hook).is_none() {
-        let hook_clip = Clip::from_frames(spritesheet.horizontal_strip(47, 0, 5));
-        let hook_clip_id = library.register_clip(hook_clip);
-        let mut hook_animation = Animation::from_clip(hook_clip_id);
-        hook_animation
-            .set_repetitions(AnimationRepeat::Times(1))
-            .set_duration(AnimationDuration::PerRepetition(200));
-        let hook_animation_id = library.register_animation(hook_animation);
-        library
-            .name_animation(hook_animation_id, Movement::Hook)
-            .unwrap();
-    }
-
-    // Uppercut
-    if library.animation_with_name(Movement::Uppercut).is_none() {
-        let uppercut_clip = Clip::from_frames(spritesheet.horizontal_strip(55, 0, 6));
-        let uppercut_clip_id = library.register_clip(uppercut_clip);
-        let mut animation = Animation::from_clip(uppercut_clip_id);
-        animation
-            .set_repetitions(AnimationRepeat::Times(1))
-            .set_duration(AnimationDuration::PerRepetition(200));
-        let animation_id = library.register_animation(animation);
-        library
-            .name_animation(animation_id, Movement::Uppercut)
-            .unwrap();
-    }
-
-    let layout = texture_atlas_layouts.add(spritesheet.atlas_layout(32, 32));
+    let idle_animation = player_animations.idle.clone();
+    commands.insert_resource(player_animations);
 
     commands
         .spawn(PlayerBundle {
             player: Player,
             name: Name::new("Player"),
             movement: Movement::Idle,
-            sprite_bundle: Sprite3dBuilder::from_image(texture)
-                .with_atlas(layout)
-                .with_transform(Transform::from_xyz(1., 4., 1.))
-                .with_custom_size(Vec2::new(2., 2.))
-                .build(),
-            sprite_sheet_animation: SpritesheetAnimation::from_id(idle_animation_id),
+            sprite: spritesheet
+                .with_size_hint(32, 32)
+                .sprite3d(&mut texture_atlas_layouts)
+                .with_custom_size(Vec2::new(2., 2.)),
+            transform: Transform::from_xyz(1., 4., 1.),
+            sprite_sheet_animation: SpritesheetAnimation::new(idle_animation),
             collider_bundle: ColliderBundle {
                 collider: Collider::round_cylinder(0.9, 0.05, 0.1),
                 rigid_body: RigidBody::KinematicPositionBased,
@@ -150,10 +122,7 @@ pub fn spawn(
                 snap_to_ground: Some(CharacterLength::Absolute(0.5)),
                 ..default()
             },
-            input_manager: InputManagerBundle {
-                input_map: Input::player_one(),
-                ..default()
-            },
+            input_map: Input::player_one(),
             velocity: Velocity::default(),
             enemies_in_reach: EnemiesInReach::default(),
             facing_direction: FacingDirection::Right,
@@ -161,7 +130,7 @@ pub fn spawn(
         .with_children(|children| {
             children.spawn((
                 Collider::cuboid(0.5, 0.5, 0.5),
-                TransformBundle::from(Transform::from_xyz(0.2, 0., 0.)),
+                Transform::from_xyz(0.2, 0., 0.),
                 Sensor,
                 PlayerReachSensor,
                 ActiveEvents::COLLISION_EVENTS,
@@ -170,8 +139,8 @@ pub fn spawn(
 }
 
 pub fn despawn(mut commands: Commands, player_query: Query<Entity, With<Player>>) {
-    if let Ok(player) = player_query.get_single() {
-        commands.entity(player).despawn_recursive();
+    if let Ok(player) = player_query.single() {
+        commands.entity(player).despawn();
     }
 }
 
@@ -190,14 +159,21 @@ pub fn update_facing_direction(
 const DELTA: f32 = 0.5;
 
 pub fn update_player_animation(
-    library: Res<AnimationLibrary>,
+    animations: Res<PlayerAnimations>,
     mut player_query: Query<(&Movement, &mut SpritesheetAnimation), With<Player>>,
 ) {
     for (movement, mut animation) in player_query.iter_mut() {
-        if let Some(animation_id) = library.animation_with_name(movement) {
-            if animation.animation_id != animation_id {
-                animation.switch(animation_id);
-            }
+        let next_animation = match movement {
+            Movement::Idle => &animations.idle,
+            Movement::Walk => &animations.walk,
+            Movement::Jump => &animations.jump,
+            Movement::Fall => &animations.fall,
+            Movement::Jab => &animations.jab,
+            Movement::Hook => &animations.hook,
+            Movement::Uppercut => &animations.uppercut,
+        };
+        if animation.animation != *next_animation {
+            animation.switch(next_animation.clone());
         }
     }
 }
@@ -212,7 +188,7 @@ pub fn flip_player_sprite(
             FacingDirection::Right => sprite.flip_x = false,
         }
 
-        if let Ok(mut reach_sensor_transform) = player_reach_sensor_query.get_single_mut() {
+        if let Ok(mut reach_sensor_transform) = player_reach_sensor_query.single_mut() {
             match facing_direction {
                 FacingDirection::Left => {
                     reach_sensor_transform.translation =
@@ -227,42 +203,18 @@ pub fn flip_player_sprite(
 }
 
 pub fn player_animation_event(
-    mut events: EventReader<AnimationEvent>,
-    library: Res<AnimationLibrary>,
+    mut events: MessageReader<AnimationEvent>,
     mut player_query: Query<&mut Movement, With<Player>>,
     mut enemy_query: Query<&mut EnemyMovement, With<Enemy>>,
 ) {
     for event in events.read() {
         match event {
-            AnimationEvent::ClipEnd { animation_id, .. } => {
-                if let Some(hit_animation_id) = library.animation_with_name(EnemyMovement::Hit) {
-                    if *animation_id == hit_animation_id {
-                        for mut movement in enemy_query.iter_mut() {
-                            movement.set_if_neq(EnemyMovement::Idle);
-                        }
-                    }
+            AnimationEvent::AnimationEnd { entity, .. } => {
+                if let Ok(mut movement) = player_query.get_mut(*entity) {
+                    movement.set_if_neq(Movement::Idle);
                 }
-                if let Some(jab_animation_id) = library.animation_with_name(Movement::Jab) {
-                    if *animation_id == jab_animation_id {
-                        if let Ok(mut movement) = player_query.get_single_mut() {
-                            movement.set_if_neq(Movement::Idle);
-                        }
-                    }
-                }
-                if let Some(hook_animation_id) = library.animation_with_name(Movement::Hook) {
-                    if *animation_id == hook_animation_id {
-                        if let Ok(mut movement) = player_query.get_single_mut() {
-                            movement.set_if_neq(Movement::Idle);
-                        }
-                    }
-                }
-                if let Some(uppercut_animation_id) = library.animation_with_name(Movement::Uppercut)
-                {
-                    if *animation_id == uppercut_animation_id {
-                        if let Ok(mut movement) = player_query.get_single_mut() {
-                            movement.set_if_neq(Movement::Idle);
-                        }
-                    }
+                if let Ok(mut movement) = enemy_query.get_mut(*entity) {
+                    movement.set_if_neq(EnemyMovement::Idle);
                 }
             }
             _event => (),
@@ -292,8 +244,7 @@ pub fn move_player(
     time: Res<Time>,
     mut grounded_timer: Local<f32>,
 ) {
-    if let Ok((action, velocity, mut movement, mut controller, output)) =
-        player_query.get_single_mut()
+    if let Ok((action, velocity, mut movement, mut controller, output)) = player_query.single_mut()
     {
         let mut velocity = velocity.linvel;
 
@@ -302,11 +253,11 @@ pub fn move_player(
             velocity.y = 0.;
             *grounded_timer = 0.8;
         } else {
-            velocity.y += GRAVITY * time.delta_seconds() * controller.custom_mass.unwrap_or(1.);
+            velocity.y += GRAVITY * time.delta_secs() * controller.custom_mass.unwrap_or(1.);
         }
 
         if *grounded_timer > 0. {
-            *grounded_timer -= time.delta_seconds();
+            *grounded_timer -= time.delta_secs();
             if action.just_pressed(&Input::Jump) {
                 velocity.y = V_0;
             }
@@ -362,7 +313,7 @@ pub fn move_player(
         }
 
         if is_moving {
-            let mut translation_change = velocity * time.delta_seconds();
+            let mut translation_change = velocity * time.delta_secs();
             controller.translation = match controller.translation {
                 Some(existing_translation) => {
                     translation_change += existing_translation;
@@ -379,8 +330,8 @@ pub fn move_player(
 }
 
 pub fn update_enemies_in_reach(
-    mut collision_events: EventReader<CollisionEvent>,
-    player_reach_sensor_query: Query<&Parent, With<PlayerReachSensor>>,
+    mut collision_events: MessageReader<CollisionEvent>,
+    player_reach_sensor_query: Query<&ChildOf, With<PlayerReachSensor>>,
     mut player_query: Query<&mut EnemiesInReach, With<Player>>,
 ) {
     for event in collision_events.read() {
@@ -390,7 +341,7 @@ pub fn update_enemies_in_reach(
                     .get(*entity1)
                     .or_else(|_| player_reach_sensor_query.get(*entity2))
                 {
-                    if let Ok(mut enemies_in_reach) = player_query.get_mut(player_entity.get()) {
+                    if let Ok(mut enemies_in_reach) = player_query.get_mut(player_entity.parent()) {
                         // Identify the enemy entity (the other collider)
                         let enemy = if player_reach_sensor_query.get(*entity1).is_ok() {
                             *entity2
@@ -406,7 +357,7 @@ pub fn update_enemies_in_reach(
                     .get(*entity1)
                     .or_else(|_| player_reach_sensor_query.get(*entity2))
                 {
-                    if let Ok(mut enemies_in_reach) = player_query.get_mut(player_entity.get()) {
+                    if let Ok(mut enemies_in_reach) = player_query.get_mut(player_entity.parent()) {
                         // Identify the enemy entity (the other collider)
                         let enemy = if player_reach_sensor_query.get(*entity1).is_ok() {
                             *entity2
@@ -427,7 +378,7 @@ pub fn punch(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
 ) {
-    if let Ok((input, facing_direction, enemies_in_reach)) = player_query.get_single() {
+    if let Ok((input, facing_direction, enemies_in_reach)) = player_query.single() {
         for enemy in &enemies_in_reach.0 {
             if input.just_pressed(&Input::Hook) {
                 if let Ok((mut ext_impulse, mut movement)) = enemy_impulses.get_mut(*enemy) {
@@ -436,13 +387,10 @@ pub fn punch(
                         FacingDirection::Right => ext_impulse.impulse = Vec3::new(0., 0., -0.2),
                     }
                     movement.set_if_neq(EnemyMovement::Hit);
-                    commands.spawn(AudioBundle {
-                        source: asset_server.load("punch.mp3"),
-                        settings: PlaybackSettings {
-                            mode: PlaybackMode::Despawn,
-                            ..default()
-                        },
-                    });
+                    commands.spawn((
+                        AudioPlayer::<AudioSource>(asset_server.load("punch.mp3")),
+                        PlaybackSettings::DESPAWN,
+                    ));
                 }
             } else if input.just_pressed(&Input::LightPunch) {
                 if let Ok((mut ext_impulse, mut movement)) = enemy_impulses.get_mut(*enemy) {
@@ -451,25 +399,19 @@ pub fn punch(
                         FacingDirection::Right => ext_impulse.impulse = Vec3::new(0.1, 0., 0.),
                     }
                     movement.set_if_neq(EnemyMovement::Hit);
-                    commands.spawn(AudioBundle {
-                        source: asset_server.load("punch.mp3"),
-                        settings: PlaybackSettings {
-                            mode: PlaybackMode::Despawn,
-                            ..default()
-                        },
-                    });
+                    commands.spawn((
+                        AudioPlayer::<AudioSource>(asset_server.load("punch.mp3")),
+                        PlaybackSettings::DESPAWN,
+                    ));
                 }
             } else if input.just_pressed(&Input::Uppercut) {
                 if let Ok((mut ext_impulse, mut movement)) = enemy_impulses.get_mut(*enemy) {
                     ext_impulse.impulse = Vec3::new(0., 0.1, 0.);
                     movement.set_if_neq(EnemyMovement::Hit);
-                    commands.spawn(AudioBundle {
-                        source: asset_server.load("punch.mp3"),
-                        settings: PlaybackSettings {
-                            mode: PlaybackMode::Despawn,
-                            ..default()
-                        },
-                    });
+                    commands.spawn((
+                        AudioPlayer::<AudioSource>(asset_server.load("punch.mp3")),
+                        PlaybackSettings::DESPAWN,
+                    ));
                 }
             }
         }
@@ -484,7 +426,7 @@ pub fn collect_fruits(
     >,
     fruits: Query<Entity, With<Fruit>>,
 ) {
-    if let Ok(output) = character_controller_outputs.get_single() {
+    if let Ok(output) = character_controller_outputs.single() {
         for collision in &output.collisions {
             if fruits.get(collision.entity).is_ok() {
                 commands.entity(collision.entity).despawn()

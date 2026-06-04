@@ -1,5 +1,8 @@
 use bevy::prelude::*;
 
+#[derive(Component)]
+pub struct GameWorldTag;
+
 #[derive(Component, Reflect, Default, Debug)]
 #[reflect(Component)]
 pub enum Collider {
